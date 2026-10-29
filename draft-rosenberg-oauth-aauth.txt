@@ -4,11 +4,11 @@
 
 WG Working Group                                              Y. N. Here
 Internet-Draft                                    Your Organization Here
-Intended status: Informational                           29 October 2026
+Intended status: Standards Track                         29 October 2026
 Expires: 2 May 2027
 
 
-                           TODO - Your title
+           AAuth - Agentic Authorization OAuth 2.1 Extension
                   draft-todo-yourname-protocol-latest
 
 Abstract
