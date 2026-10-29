@@ -19,9 +19,9 @@
 # Change the file extension to match the format (.xml for XML, etc...)
 #
 ###
-title: "TODO - Your title"
-abbrev: "TODO - Abbreviation"
-category: info
+title: "AAuth - Agentic Authorization OAuth 2.1 Extension"
+abbrev: "AAuth"
+category: std
 
 docname: draft-todo-yourname-protocol-latest
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
