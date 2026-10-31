@@ -5,15 +5,16 @@
 <meta content="Common,Latin" name="scripts">
 <meta content="initial-scale=1.0" name="viewport">
 <title>AAuth - Agentic Authorization OAuth 2.1 Extension</title>
-<meta content="Your Name Here" name="author">
+<meta content="Jonathan Rosenberg" name="author">
+<meta content="Pat White" name="author">
 <meta content="
-       TODO Abstract 
+       AI Agents are increasingly accessing web resources on behalf of the users they serve. Traditionally these agents are granted normal OAuth access tokens through existing OAuth grant flows. However, these flows were designed in the era of traditional software, and when applied to AI Agents, multiple problems have arisen. This document outlines some of the problems, and then proposes a simple OAuth2.1 extension that enables AI Agents to obtain access tokens at time of resource access using Human-In-the-Loop or other approval flows. We call this the Agent Authorization Grant (aauth) grant flow. This document also compares the proposed solution with another, non-backwards compatible aauth solution. 
     " name="description">
 <meta content="xml2rfc 3.34.1" name="generator">
 <meta content="next generation" name="keyword">
 <meta content="unicorn" name="keyword">
 <meta content="AI-native" name="keyword">
-<meta content="draft-todo-yourname-protocol-latest" name="ietf.draft">
+<meta content="draft-rosenberg-oauth-aauth-latest" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.34.1
     Python 3.14.8
@@ -1046,8 +1047,8 @@ svg {
 <td class="right">October 2026</td>
 </tr></thead>
 <tfoot><tr>
-<td class="left">Here</td>
-<td class="center">Expires 2 May 2027</td>
+<td class="left">Rosenberg &amp; White</td>
+<td class="center">Expires 4 May 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1055,22 +1056,26 @@ svg {
 <div id="internal-metadata" class="document-information">
 <dl id="identifiers">
 <dt class="label-workgroup">Workgroup:</dt>
-<dd class="workgroup">WG Working Group</dd>
+<dd class="workgroup">Web Authorization Protocol</dd>
 <dt class="label-internet-draft">Internet-Draft:</dt>
-<dd class="internet-draft">draft-todo-yourname-protocol-latest</dd>
+<dd class="internet-draft">draft-rosenberg-oauth-aauth-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-10-29" class="published">29 October 2026</time>
+<time datetime="2026-10-31" class="published">31 October 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-05-02">2 May 2027</time></dd>
-<dt class="label-authors">Author:</dt>
+<dd class="expires"><time datetime="2027-05-04">4 May 2027</time></dd>
+<dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
-      <div class="author-name">Y. N. Here</div>
-<div class="org">Your Organization Here</div>
+      <div class="author-name">J. Rosenberg</div>
+<div class="org">jdrosen.net</div>
+</div>
+<div class="author">
+      <div class="author-name">P. White</div>
+<div class="org">Bitwave</div>
 </div>
 </dd>
 </dl>
@@ -1078,7 +1083,7 @@ svg {
 <h1 id="title">AAuth - Agentic Authorization OAuth 2.1 Extension</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">TODO Abstract<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">AI Agents are increasingly accessing web resources on behalf of the users they serve. Traditionally these agents are granted normal OAuth access tokens through existing OAuth grant flows. However, these flows were designed in the era of traditional software, and when applied to AI Agents, multiple problems have arisen. This document outlines some of the problems, and then proposes a simple OAuth2.1 extension that enables AI Agents to obtain access tokens at time of resource access using Human-In-the-Loop or other approval flows. We call this the Agent Authorization Grant (aauth) grant flow. This document also compares the proposed solution with another, non-backwards compatible aauth solution.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1086,14 +1091,15 @@ svg {
       </h2>
 <p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
 <p id="section-note.1-2">
-        The latest revision of this draft can be found at <span><a href="https://example.com/LATEST">https://example.com/LATEST</a></span>.
-        Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-todo-yourname-protocol/">https://datatracker.ietf.org/doc/draft-todo-yourname-protocol/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+        The latest revision of this draft can be found at <span><a href="https://jdrosen.github.io/draft-rosenberg-oauth-aauth/draft-rosenberg-oauth-aauth.html">https://jdrosen.github.io/draft-rosenberg-oauth-aauth/draft-rosenberg-oauth-aauth.html</a></span>.
+        Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-rosenberg-oauth-aauth/">https://datatracker.ietf.org/doc/draft-rosenberg-oauth-aauth/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
 <p id="section-note.1-3">
         Discussion of this document takes place on the
-        WG Working Group mailing list (<span><a href="mailto:WG@example.com">mailto:WG@example.com</a></span>),
-        which is archived at <span><a href="https://example.com/WG">https://example.com/WG</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
+        Web Authorization Protocol Working Group mailing list (<span><a href="mailto:oauth@ietf.org">mailto:oauth@ietf.org</a></span>),
+        which is archived at <span><a href="https://mailarchive.ietf.org/arch/browse/oauth/">https://mailarchive.ietf.org/arch/browse/oauth/</a></span>.
+        Subscribe at <span><a href="https://www.ietf.org/mailman/listinfo/oauth/">https://www.ietf.org/mailman/listinfo/oauth/</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
 <p id="section-note.1-4">Source for this draft and an issue tracker can be found at
-        <span><a href="https://github.com/USER/REPO">https://github.com/USER/REPO</a></span>.<a href="#section-note.1-4" class="pilcrow">¶</a></p>
+        <span><a href="https://github.com/jdrosen/draft-rosenberg-oauth-aauth">https://github.com/jdrosen/draft-rosenberg-oauth-aauth</a></span>.<a href="#section-note.1-4" class="pilcrow">¶</a></p>
 </section>
 <div id="status-of-memo">
 <section id="section-boilerplate.1">
@@ -1114,7 +1120,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 2 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 4 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1150,19 +1156,74 @@ svg {
             <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-terminology" class="internal xref">Terminology</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-the-aauth-grant-flow" class="internal xref">The AAuth Grant Flow</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-step-1-requesting-the-mimim" class="internal xref">Step 1: Requesting the Mimimal Scope AI Agent TOken</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-step-2-access-the-resource" class="internal xref">Step 2: Access the Resource</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-step-3-initiate-aaauth-gran" class="internal xref">Step 3: Initiate AAauth Grant Flow with AS</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3.2.1">
+                    <p id="section-toc.1-1.4.2.3.2.1.1"><a href="#section-4.3.1" class="auto internal xref">4.3.1</a>.  <a href="#name-step-4-as-processes-grant-r" class="internal xref">Step 4: AS Processes Grant Request</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4">
+                <p id="section-toc.1-1.4.2.4.1"><a href="#section-4.4" class="auto internal xref">4.4</a>.  <a href="#name-user-approval" class="internal xref">User Approval</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4.2.1">
+                    <p id="section-toc.1-1.4.2.4.2.1.1"><a href="#section-4.4.1" class="auto internal xref">4.4.1</a>.  <a href="#name-non-standardized-approval-t" class="internal xref">Non-Standardized Approval Techniques</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4.2.2">
+                    <p id="section-toc.1-1.4.2.4.2.2.1"><a href="#section-4.4.2" class="auto internal xref">4.4.2</a>.  <a href="#name-web-approval-technique" class="internal xref">Web Approval Technique</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5">
+                <p id="section-toc.1-1.4.2.5.1"><a href="#section-4.5" class="auto internal xref">4.5</a>.  <a href="#name-token-retrieval" class="internal xref">Token Retrieval</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5.2.1">
+                    <p id="section-toc.1-1.4.2.5.2.1.1"><a href="#section-4.5.1" class="auto internal xref">4.5.1</a>.  <a href="#name-http-polling" class="internal xref">HTTP Polling</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5.2.2">
+                    <p id="section-toc.1-1.4.2.5.2.2.1"><a href="#section-4.5.2" class="auto internal xref">4.5.2</a>.  <a href="#name-server-sent-events-sse" class="internal xref">Server-Sent Events (SSE)</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5.2.3">
+                    <p id="section-toc.1-1.4.2.5.2.3.1"><a href="#section-4.5.3" class="auto internal xref">4.5.3</a>.  <a href="#name-websocket" class="internal xref">WebSocket</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.6">
+                <p id="section-toc.1-1.4.2.6.1"><a href="#section-4.6" class="auto internal xref">4.6</a>.  <a href="#name-error-handling-back-off" class="internal xref">Error Handling &amp; Back-Off</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-new-oauth-grant-type" class="internal xref">New OAuth Grant Type</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-well-defined-scope" class="internal xref">Well-Defined Scope</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1173,7 +1234,19 @@ svg {
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">TODO Introduction<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-1">OAuth 2.1 <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> provides a framework for delegated access via bearer tokens. It has been wildly successful, with widespread deployment across the Internet. It was built to solve a key problem - how to allow software applications to access resources on a user's behalf, without requiring the user to give the application their username and password or other credentials.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">The key assumption behind OAuth is that software applications know in advance what kinds of access they require. They can therefore request scopes - which are an umbrella set of permissions - associated with that acess. Ther user, presented with that set of scopes, can approve (or reject), resulting in the delivery of an access token to the software application. Once delivered, then the software application can make use of it to access the resource.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">AI Agents - like traditional software applications - also need to invoke APIs on behalf of resource owners, and most implementations make use of OAuth grant flows to enable those AI agents to gain access tokens. However - key differences between AI Agents and traditional software applications have introduced several problems:<a href="#section-1-3" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-1-4">
+<li id="section-1-4.1">
+          <p id="section-1-4.1.1">It is not known what APIs an AI Agent might need to access ahead of time. AI Agents make decisions adaptively, based on the needs of the user. This can be solved by granting wide token scopes that grant all access. However, this introduces a security problem.<a href="#section-1-4.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-1-4.2">
+          <p id="section-1-4.2.1">AI Agents can make mistakes. As a result, giving them broadly scoped tokens could potentially lead to disastrous results.<a href="#section-1-4.2.1" class="pilcrow">¶</a></p>
+</li>
+      </ol>
+<p id="section-1-5">There is currently no easy way to solve these problems jointly.<a href="#section-1-5" class="pilcrow">¶</a></p>
+<p id="section-1-6">This document proposes a simple solution to the problem, in the form of a new OAuth grant flow - which we call the Agent Authorization Grant (aauth) Flow, and a new well-defined scope.<a href="#section-1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="conventions-and-definitions">
@@ -1187,58 +1260,400 @@ described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</s
 appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="security">
+<div id="terminology">
 <section id="section-3">
-      <h2 id="name-security-considerations">
-<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      <h2 id="name-terminology">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-terminology" class="section-name selfRef">Terminology</a>
       </h2>
-<p id="section-3-1">TODO Security<a href="#section-3-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-3-1">
+        <dt id="section-3-1.1">AI Agent:</dt>
+        <dd style="margin-left: 1.5em" id="section-3-1.2">
+          <p id="section-3-1.2.1">A piece of software that acts as the OAuth client, and operates in an agentic nature, requiring usage of the grant flow defined in this specification. Like all other clients, it has a stable, long-lived identity (<code>client_id</code>).<a href="#section-3-1.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-3-1.3">Authorization Server (AS):</dt>
+        <dd style="margin-left: 1.5em" id="section-3-1.4">
+          <p id="section-3-1.4.1">Issues <code>request_code</code> handles, manages user consent, and issues access tokens.<a href="#section-3-1.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-3-1.5">Resource Server (RS):</dt>
+        <dd style="margin-left: 1.5em" id="section-3-1.6">
+          <p id="section-3-1.6.1">API server that protects resources via OAuth tokens and publishes human-readable scope descriptions at <code>/.well-known/aauth.json</code>.<a href="#section-3-1.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-3-1.7">request_code:</dt>
+        <dd style="margin-left: 1.5em" id="section-3-1.8">
+          <p id="section-3-1.8.1">Opaque handle returned by the AS to correlate an agent’s request with subsequent token retrieval.<a href="#section-3-1.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-3-1.9">reason:</dt>
+        <dd style="margin-left: 1.5em" id="section-3-1.10">
+          <p id="section-3-1.10.1">Human-readable explanation provided by the agent, shown to the user during consent.<a href="#section-3-1.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-3-1.11">:scope_descriptions:</dt>
+        <dd style="margin-left: 1.5em" id="section-3-1.12">
+          <p id="section-3-1.12.1">Natural-language text for each requested scope, fetched from the RS’s discovery document.<a href="#section-3-1.12.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
 </section>
 </div>
-<div id="iana">
+<div id="the-aauth-grant-flow">
 <section id="section-4">
-      <h2 id="name-iana-considerations">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      <h2 id="name-the-aauth-grant-flow">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-the-aauth-grant-flow" class="section-name selfRef">The AAuth Grant Flow</a>
       </h2>
-<p id="section-4-1">This document has no IANA actions.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-1">This flow is modeled on the OAuth 2.0 Device Authorization Grant <span>[<a href="#RFC8628" class="cite xref">RFC8628</a>]</span> but is tailored for confidential agent clients with long-lived identities, and optimized for performant delivery of tokens to the agent.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">The flow executes throught a series of steps.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<div id="step-1-requesting-the-mimimal-scope-ai-agent-token">
+<section id="section-4.1">
+        <h3 id="name-step-1-requesting-the-mimim">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-step-1-requesting-the-mimim" class="section-name selfRef">Step 1: Requesting the Mimimal Scope AI Agent TOken</a>
+        </h3>
+<p id="section-4.1-1">In the first step, the AI Agent requests an access token with very limited scope. This scope has a very specific meaning in the context of this specification. It refers to the set of access that is permitted by an AI Agent which is completely safe and should not require the resource owner - or software or AI agents operating on their behalf -  to explicitly approve. The precise set of API calls that fit under this umbrella are entirely a matter of local implementation in the resource server.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-2">We call this scope the "Minimal AI Agent scope. This specification standardizes a well-known value for this scope - "ai-agent-minimal". This is similar in concept to OIDC which defines a small set of well-defined scopes [OIDC].<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+<p id="section-4.1-3">AI Agents gain access tokens associated with this scope through any of the existing OAuth2.0 grant flows.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.1-4">For the authorization code grant flow, it is <span class="bcp14">RECOMMENDED</span> that Authorization Servers render information to the resource owner, informing them that this is an AI Agent, and they may be required to perform additional approvals to when the AI Agent does something that has some risk. It is <span class="bcp14">RECOMMENDED</span> that examples are provided on what type of access is considered risky. For example, a travel website may allow an AI Agent to list flights, or enumerate airports. However, listing of a user's travel plans or making flight changes, is considered risky.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
+<p id="section-4.1-5">In all ways, the access token obtained with this scope is a normal access token and the AI Agent can use it in the same way it uses any other access token.<a href="#section-4.1-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="step-2-access-the-resource">
+<section id="section-4.2">
+        <h3 id="name-step-2-access-the-resource">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-step-2-access-the-resource" class="section-name selfRef">Step 2: Access the Resource</a>
+        </h3>
+<p id="section-4.2-1">When the AI Agent accesses a resource on the resource server using the minimal AI Agent scope, if the minimal scope associated with the token is sufficient, the resource server will accept the request and all is well.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-2">However, if the AI Agent attempts to perform an action which the resource server determines is beyond the minimal AI agent scope, it rejects it with a 403 Forbidden HTTP response and includes an insufficient_scope error code <span>[<a href="#RFC6750" class="cite xref">RFC6750</a>]</span> in the response. It will also include the set of scopes that are required to perform the operation. Importantly, it also adds a new parameter - "reason" - which contains a natural language explanation of the reason that the minimal AI agent scope was insufficient.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="step-3-initiate-aaauth-grant-flow-with-as">
+<section id="section-4.3">
+        <h3 id="name-step-3-initiate-aaauth-gran">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-step-3-initiate-aaauth-gran" class="section-name selfRef">Step 3: Initiate AAauth Grant Flow with AS</a>
+        </h3>
+<p id="section-4.3-1">Next, the AI Agent initiates the flow defined in this specification to obtain a higher scoped, short-lived access token with the set of required scopes. To do that, it initiates an HTTP POST operation to the AS, to a new endpoint defined in this specification - "/agent_authorization", and includes the required scopes - and importantly - the value of the reason that it received from the resource server. (TODO - should probably add signatures onto the reason and scopes so a malicious AI agent cannot modify them).<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-2">An example of such a request is:<a href="#section-4.3-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3-3">
+<pre>
+POST /agent_authorization HTTP/1.1
+Host: auth.example.com
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic &lt;base64(client_id:client_secret)&gt;
+
+grant_type=urn:ietf:params:oauth:grant-type:agent_authorization&amp;
+scope=urn:example:resource.read urn:example:resource.write&amp;
+reason="&lt;human-readable reason&gt;"
+</pre><a href="#section-4.3-3" class="pilcrow">¶</a>
+</div>
+<p id="section-4.3-4">The following parameters are included in the body:<a href="#section-4.3-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.3-5.1">
+            <p id="section-4.3-5.1.1">grant_type: <span class="bcp14">MUST</span> be <code>urn:ietf:params:oauth:grant-type:agent_authorization</code>.<a href="#section-4.3-5.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.3-5.2">
+            <p id="section-4.3-5.2.1">scope: Space-delimited list of scope URIs.<a href="#section-4.3-5.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.3-5.3">
+            <p id="section-4.3-5.3.1">reason: Concise, human-readable explanation provided by the resource server; <span class="bcp14">MUST</span> be echoed verbatim by the AS.<a href="#section-4.3-5.3.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-4.3-6">The quality of the AAuth flow depends on the reason string being a concise, simple to understand explanatio of the action in a way that the user can make a decision on approval, or not.<a href="#section-4.3-6" class="pilcrow">¶</a></p>
+<div id="step-4-as-processes-grant-request">
+<section id="section-4.3.1">
+          <h4 id="name-step-4-as-processes-grant-r">
+<a href="#section-4.3.1" class="section-number selfRef">4.3.1. </a><a href="#name-step-4-as-processes-grant-r" class="section-name selfRef">Step 4: AS Processes Grant Request</a>
+          </h4>
+<p id="section-4.3.1-1">The AS validates the client credentials as per normal OAuth processing.<a href="#section-4.3.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.3.1-2">In order for the approver - whether it is a human or an AI agent operating on their behalf - to approve the request for higher scopes - natural language descriptions of those scopes are needed. To obtain them, the AS fetches scope descriptions from a well-known URI defined by this specification:<a href="#section-4.3.1-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3.1-3">
+<pre>
+https://{rs}/.well-known/aauth.json#scope_descriptions`
+</pre><a href="#section-4.3.1-3" class="pilcrow">¶</a>
+</div>
+<p id="section-4.3.1-4">The response comes back as text meant to be rendered to the user, one per scope.
+TODO - define a JSON format for this; also need to deal with localization.<a href="#section-4.3.1-4" class="pilcrow">¶</a></p>
+<p id="section-4.3.1-5">Assuming it is able to retrieve a natural language description of each scope, it returns success to the AI Agent, in the following form:<a href="#section-4.3.1-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3.1-6">
+<pre>
+{
+  "request_code": "GhiJkl-QRstuVwxyz",
+  "token_endpoint": "https://auth.example.com/token",
+  "user_approval_endpoint" : "https://auth.example.com/approve",
+  "poll_interval": 5,
+  "expires_in": 600,
+  "poll_sse_endpoint": "https://auth.example.com/agent_authorization/sse",
+  "poll_ws_endpoint": "wss://auth.example.com/agent_authorization/ws"
+}
+</pre><a href="#section-4.3.1-6" class="pilcrow">¶</a>
+</div>
+<p id="section-4.3.1-7">This response is not providing the AI Agent with a token - it is informing the AI Agent that user permission is required from the user to proceed. The AI Agent will need to come back and obtain the token later, once the user has given permission. Since the AI Agent doesn't know how long it will take for such permission to be granted, the AS provides the AI Agent with a few options.<a href="#section-4.3.1-7" class="pilcrow">¶</a></p>
+<p id="section-4.3.1-8">The AS <span class="bcp14">MUST</span> include a token_endpoint parameter in the response, which is a URL that the AI Agent can poll to retrieve the token. The AS <span class="bcp14">MAY</span> include a poll_internal in the body which specifies the requested polling interval, in seconds. If not provided, the default is 5 seconds. (TODO - add exponential backoff and AS-provided updates to poll intervals). The AS <span class="bcp14">MAY</span> include an expires_in parameter, which indicates the maximum duration the AS is willing to wait for user approval. This is also the upper bound on the time for which the AI Agent can poll.<a href="#section-4.3.1-8" class="pilcrow">¶</a></p>
+<p id="section-4.3.1-9">AS <span class="bcp14">MAY</span> support SSE or WS to allow for push-based notifications once the user has granted permission. In those cases, it includes an HTTP URI in the poll_sse_endpoint and poll_ws_endpoint, respectively.<a href="#section-4.3.1-9" class="pilcrow">¶</a></p>
+<p id="section-4.3.1-10">When the AI Agent accesses any of these endpoints, it <span class="bcp14">MUST</span> pass the request_code back to the AS in a request_code URI parmaeter. This allows the AS to echo state back to itself, for scaling and security reasons. The AS <span class="bcp14">SHOULD</span> associate this request_code with the requested scopes and reason.<a href="#section-4.3.1-10" class="pilcrow">¶</a></p>
+<p id="section-4.3.1-11">To facilitate human-in-the-loop approvals, the AS <span class="bcp14">MAY</span> include a user_approval_endpoint field in the response. This is a resource meant to be rendered to the user to request their approval.<a href="#section-4.3.1-11" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="user-approval">
+<section id="section-4.4">
+        <h3 id="name-user-approval">
+<a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-user-approval" class="section-name selfRef">User Approval</a>
+        </h3>
+<p id="section-4.4-1">The AS <span class="bcp14">MUST</span> obtain user approval in order to grant the token. It may do so using the simple approval technqiue defined here, or employ any number of mechanisms outside the scope of this specification to do so.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.4-2">In this architecture, the AS plays the role of advocate for the resource owner, making sure their security interests are met. As such, it relies on a trust relationship between the resource owner and the AS.<a href="#section-4.4-2" class="pilcrow">¶</a></p>
+<div id="non-standardized-approval-techniques">
+<section id="section-4.4.1">
+          <h4 id="name-non-standardized-approval-t">
+<a href="#section-4.4.1" class="section-number selfRef">4.4.1. </a><a href="#name-non-standardized-approval-t" class="section-name selfRef">Non-Standardized Approval Techniques</a>
+          </h4>
+<p id="section-4.4.1-1">Examples of how the AS can gain approval include sending the user an SMS or email, sending a push notification to the user's mobile device, or making a policy decision through programmatic or agentic means.<a href="#section-4.4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.4.1-2">As an example, consider an AI Agent that wishes to book a dinner reservation on behalf of a user, using OpenTable APIs. In this case, OpenTable is the resource server, and its AS is the one executing the AAuth grant flow. If the user has the OpenTable app on their mobile phone, they could get a push notification like, "AI Agent ReserveBot wants to book dinner at Joe's Italian at 9pm on Friday. Do you approve?". The text in this case, comes from the "reason" parameter generated on the RS. This allows the AS to perform this push notification without knowing intimate details on the behavior of the APIs on the RS.<a href="#section-4.4.1-2" class="pilcrow">¶</a></p>
+<p id="section-4.4.1-3">As another example, the AS can avoid a HITL entirely by running an AI agent whose sole goal is to determine whether or not the approve the access.<a href="#section-4.4.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="web-approval-technique">
+<section id="section-4.4.2">
+          <h4 id="name-web-approval-technique">
+<a href="#section-4.4.2" class="section-number selfRef">4.4.2. </a><a href="#name-web-approval-technique" class="section-name selfRef">Web Approval Technique</a>
+          </h4>
+<p id="section-4.4.2-1">This specification defines a simple web based approval technique, and is <span class="bcp14">OPTIONAL</span> to implement on an AS. If the AS supports it, it includes the user_approval_endpoint field in the response to the agent_authorization request.<a href="#section-4.4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.4.2-2">The user_approval_endpoint URI points to a page, renderable in a browser, that presents the user with the reason for the approval, and then lists and describes the scopes that are being requested. This page is rendered by the AS.<a href="#section-4.4.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.4.2-3">The AS <span class="bcp14">SHOULD</span> authenticate the end user, and once authenticated, present the information in a way that makes it clear that an AI Agent is asking for these permissions, and why.<a href="#section-4.4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.4.2-4">Once the AS has collected the users approval (or rejection), it can now pass (or not pass) the token to the AI Agent using the next steps in the flow. The approval (or rejection) are bound to the request_code, so that the AI Agent can retrieve it.<a href="#section-4.4.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.4.2-5">Note that the AI agent itself is not involved in the rendering of this approval page. The AI Agent receives the URI, and then it <span class="bcp14">MUST</span> launch a browser and open that page, and let the human user perform the approval. The AI Agent silently awaits approval, using one of the token retrieval techniques defined here.<a href="#section-4.4.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="token-retrieval">
+<section id="section-4.5">
+        <h3 id="name-token-retrieval">
+<a href="#section-4.5" class="section-number selfRef">4.5. </a><a href="#name-token-retrieval" class="section-name selfRef">Token Retrieval</a>
+        </h3>
+<p id="section-4.5-1">After user approval, the AI agent obtains its access token via one of three techniques.<a href="#section-4.5-1" class="pilcrow">¶</a></p>
+<div id="http-polling">
+<section id="section-4.5.1">
+          <h4 id="name-http-polling">
+<a href="#section-4.5.1" class="section-number selfRef">4.5.1. </a><a href="#name-http-polling" class="section-name selfRef">HTTP Polling</a>
+          </h4>
+<p id="section-4.5.1-1">The AI agent can retrieve the token by hitting this endpoint:<a href="#section-4.5.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.1-2">
+<pre>
+   POST /token HTTP/1.1
+   Host: auth.example.com
+   Content-Type: application/x-www-form-urlencoded
+   Authorization: Basic &lt;base64(client_id:client_secret)&gt;
+
+   grant_type=urn:ietf:params:oauth:grant-type:agent_authorization&amp;
+   request_code=GhiJkl-QRstuVwxyz
+
+
+   *Pending*: `{"error":"authorization_pending"}`
+   *Success*: Standard OAuth 2.x token response.
+</pre><a href="#section-4.5.1-2" class="pilcrow">¶</a>
+</div>
+<p id="section-4.5.1-3">Note that the endpoint requires the AI Agent to authenticate itself using its clientID and secret. Note further that the body contains the request_code parameter, which acts as the primary key bound to the approval and the resulting token. (TODO - add case where user has declined).<a href="#section-4.5.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="server-sent-events-sse">
+<section id="section-4.5.2">
+          <h4 id="name-server-sent-events-sse">
+<a href="#section-4.5.2" class="section-number selfRef">4.5.2. </a><a href="#name-server-sent-events-sse" class="section-name selfRef">Server-Sent Events (SSE)</a>
+          </h4>
+<p id="section-4.5.2-1">The AI agent can use SSE.<a href="#section-4.5.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.2-2">
+<pre>
+   GET /agent_authorization/sse?request_code=GhiJkl-QRstuVwxyz HTTP/1.1
+   Host: auth.example.com
+   Authorization: Bearer &lt;agent_jwt&gt;
+   Accept: text/event-stream
+</pre><a href="#section-4.5.2-2" class="pilcrow">¶</a>
+</div>
+<p id="section-4.5.2-3">On approval:<a href="#section-4.5.2-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.2-4">
+<pre>
+   event: token_response
+   data: {"access_token":"&lt;JWT&gt;","expires_in":900,"issued_token_type":"urn:ietf:params:oauth:token-type:jwt"}
+</pre><a href="#section-4.5.2-4" class="pilcrow">¶</a>
+</div>
+<p id="section-4.5.2-5">On user rejection:<a href="#section-4.5.2-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.2-6">
+<pre>
+    event: error
+    data: {"error":"access_denied","error_description":"The user denied the request."}
+</pre><a href="#section-4.5.2-6" class="pilcrow">¶</a>
+</div>
+<p id="section-4.5.2-7">On request expiration:<a href="#section-4.5.2-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.2-8">
+<pre>
+    event: error
+    data: {"error":"expired_token","error_description":"The request_code has expired."}
+</pre><a href="#section-4.5.2-8" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="websocket">
+<section id="section-4.5.3">
+          <h4 id="name-websocket">
+<a href="#section-4.5.3" class="section-number selfRef">4.5.3. </a><a href="#name-websocket" class="section-name selfRef">WebSocket</a>
+          </h4>
+<p id="section-4.5.3-1">The agent can connect via websockets.<a href="#section-4.5.3-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.3-2">
+<pre>
+   GET /agent_authorization/ws?request_code=GhiJkl-QRstuVwxyz HTTP/1.1
+   Host: auth.example.com
+   Upgrade: websocket
+   Connection: Upgrade
+   Sec-WebSocket-Protocol: aauth.agent-flow
+   Authorization: Bearer &lt;agent_jwt&gt;
+</pre><a href="#section-4.5.3-2" class="pilcrow">¶</a>
+</div>
+<p id="section-4.5.3-3">On open:<a href="#section-4.5.3-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.3-4">
+<pre>
+   {
+     "type": "token_response",
+     "access_token": "&lt;JWT&gt;",
+     "issued_token_type": "urn:ietf:params:oauth:token-type:jwt",
+     "expires_in": 900
+   }
+</pre><a href="#section-4.5.3-4" class="pilcrow">¶</a>
+</div>
+<p id="section-4.5.3-5">On token response:<a href="#section-4.5.3-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.3-6">
+<pre>
+    {"type":"token_response","access_token":"&lt;JWT&gt;","issued_token_type":"urn:ietf:params:oauth:token-type:jwt","expires_in":900}
+</pre><a href="#section-4.5.3-6" class="pilcrow">¶</a>
+</div>
+<p id="section-4.5.3-7">On user rejection or expiration:<a href="#section-4.5.3-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.3-8">
+<pre>
+    {"type":"error","error":"access_denied","error_description":"The user denied the request."}
+</pre><a href="#section-4.5.3-8" class="pilcrow">¶</a>
+</div>
+<p id="section-4.5.3-9">On request expiration:<a href="#section-4.5.3-9" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.3-10">
+<pre>
+    {"type":"error","error":"expired_token","error_description":"The request_code has expired."}
+</pre><a href="#section-4.5.3-10" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="error-handling-back-off">
+<section id="section-4.6">
+        <h3 id="name-error-handling-back-off">
+<a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-error-handling-back-off" class="section-name selfRef">Error Handling &amp; Back-Off</a>
+        </h3>
+<p id="section-4.6-1">With HTTP Polling, the agent <span class="bcp14">MUST</span> honor <code>error="slow_down"</code> with <code>Retry-After</code> headers; return standard OAuth error codes such as <code>authorization_pending</code>, <code>access_denied</code>, or <code>expired_token</code>.<a href="#section-4.6-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-5">
+      <h2 id="name-security-considerations">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<ul class="normal">
+<li class="normal" id="section-5-1.1">
+          <p id="section-5-1.1.1">Agents <span class="bcp14">MUST</span> protect their long-lived credentials.<a href="#section-5-1.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-5-1.2">
+          <p id="section-5-1.2.1">Short-lived <code>request_code</code> and tokens limit replay risk.<a href="#section-5-1.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-5-1.3">
+          <p id="section-5-1.3.1">RS scope descriptions should not expose sensitive system details.<a href="#section-5-1.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-5-1.4">
+          <p id="section-5-1.4.1">Implement rate-limiting on polling and push channels to prevent abuse.<a href="#section-5-1.4.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-6">
+      <h2 id="name-iana-considerations">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<div id="new-oauth-grant-type">
+<section id="section-6.1">
+        <h3 id="name-new-oauth-grant-type">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-new-oauth-grant-type" class="section-name selfRef">New OAuth Grant Type</a>
+        </h3>
+<p id="section-6.1-1">This document registers the following new OAuth grant type:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.1-2">
+<pre>
+urn:ietf:params:oauth:grant-type:agent_authorization
+</pre><a href="#section-6.1-2" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="well-defined-scope">
+<section id="section-6.2">
+        <h3 id="name-well-defined-scope">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-well-defined-scope" class="section-name selfRef">Well-Defined Scope</a>
+        </h3>
+<p id="section-6.2-1">TODO - is there an IANA registry for this?<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="sec-normative-references">
-<section id="section-5">
+<section id="section-7">
       <h2 id="name-normative-references">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
       </h2>
 <dl class="references">
 <dt id="RFC2119">[RFC2119]</dt>
       <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RFC6749">[RFC6749]</dt>
+      <dd>
+<span class="refAuthor">Hardt, D., Ed.</span>, <span class="refTitle">"The OAuth 2.0 Authorization Framework"</span>, <span class="seriesInfo">RFC 6749</span>, <span class="seriesInfo">DOI 10.17487/RFC6749</span>, <time datetime="2012-10" class="refDate">October 2012</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6749">https://www.rfc-editor.org/rfc/rfc6749</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC6750">[RFC6750]</dt>
+      <dd>
+<span class="refAuthor">Jones, M.</span> and <span class="refAuthor">D. Hardt</span>, <span class="refTitle">"The OAuth 2.0 Authorization Framework: Bearer Token Usage"</span>, <span class="seriesInfo">RFC 6750</span>, <span class="seriesInfo">DOI 10.17487/RFC6750</span>, <time datetime="2012-10" class="refDate">October 2012</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6750">https://www.rfc-editor.org/rfc/rfc6750</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
-    <dd>
+      <dd>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8628">[RFC8628]</dt>
+      <dd>
+<span class="refAuthor">Denniss, W.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Jones, M.</span>, and <span class="refAuthor">H. Tschofenig</span>, <span class="refTitle">"OAuth 2.0 Device Authorization Grant"</span>, <span class="seriesInfo">RFC 8628</span>, <span class="seriesInfo">DOI 10.17487/RFC8628</span>, <time datetime="2019-08" class="refDate">August 2019</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8628">https://www.rfc-editor.org/rfc/rfc8628</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8693">[RFC8693]</dt>
+    <dd>
+<span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Nadalin, A.</span>, <span class="refAuthor">Campbell, B., Ed.</span>, <span class="refAuthor">Bradley, J.</span>, and <span class="refAuthor">C. Mortimore</span>, <span class="refTitle">"OAuth 2.0 Token Exchange"</span>, <span class="seriesInfo">RFC 8693</span>, <span class="seriesInfo">DOI 10.17487/RFC8693</span>, <time datetime="2020-01" class="refDate">January 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8693">https://www.rfc-editor.org/rfc/rfc8693</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
 </div>
-<div id="acknowledgments">
-<section id="appendix-A">
-      <h2 id="name-acknowledgments">
-<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
-      </h2>
-<p id="appendix-A-1">TODO acknowledge.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
-</section>
-</div>
 <div id="authors-addresses">
-<section id="appendix-B">
-      <h2 id="name-authors-address">
-<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+<section id="appendix-A">
+      <h2 id="name-authors-addresses">
+<a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>
 <address class="vcard">
-        <div dir="auto" class="left"><span class="fn nameRole">Your Name Here</span></div>
-<div dir="auto" class="left"><span class="org">Your Organization Here</span></div>
+        <div dir="auto" class="left"><span class="fn nameRole">Jonathan Rosenberg</span></div>
+<div dir="auto" class="left"><span class="org">jdrosen.net</span></div>
 <div class="email">
 <span>Email:</span>
-<a href="mailto:your.email@example.com" class="email">your.email@example.com</a>
+<a href="mailto:jdrosen@jdrosen.net" class="email">jdrosen@jdrosen.net</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Pat White</span></div>
+<div dir="auto" class="left"><span class="org">Bitwave</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:pat.white@traego.com" class="email">pat.white@traego.com</a>
 </div>
 </address>
 </section>
