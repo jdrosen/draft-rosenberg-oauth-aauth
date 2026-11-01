@@ -80,50 +80,56 @@ Table of Contents
    1.  Introduction
    2.  Conventions and Definitions
    3.  Terminology
-   4.  The AAuth Grant Flow
-     4.1.  Step 1: Requesting the Minimal Scope AI Agent Token
-     4.2.  Step 2: Access the Resource
-       4.2.1.  The Scope Challenge
-     4.3.  Step 3: Initiate AAuth Grant Flow with AS
-       4.3.1.  Agent-Supplied Timeout
-     4.4.  Step 4: AS Processes Grant Request
-       4.4.1.  Validating the Scope Challenge
-       4.4.2.  Obtaining Scope Descriptions
-       4.4.3.  Agent Authorization Response
-     4.5.  User Approval
-       4.5.1.  Non-Standardized Approval Techniques
-       4.5.2.  Web Approval Technique
-     4.6.  Token Retrieval
-       4.6.1.  HTTP Polling
-       4.6.2.  Server-Sent Events (SSE)
-       4.6.3.  WebSocket
-     4.7.  Error Handling and Back-Off
-       4.7.1.  Status Codes
-       4.7.2.  Back-Off
-   5.  Discovery Metadata
-     5.1.  Authorization Server Metadata
-     5.2.  Protected Resource Metadata
-   6.  Security Considerations
-     6.1.  Client Credentials
-     6.2.  Integrity of the Reason and Scopes
-     6.3.  request_code
-     6.4.  Delivery of Tokens over Push Channels
-     6.5.  Approval Channels and Agent-Mediated Approval
-     6.6.  Rate Limiting and Resource Exhaustion
-     6.7.  Scope Descriptions
-     6.8.  Elevated Tokens
-   7.  IANA Considerations
-     7.1.  OAuth URI Registration
-     7.2.  OAuth Parameters Registration
-     7.3.  OAuth Extensions Error Registration
-     7.4.  OAuth Authorization Server Metadata Registration
-     7.5.  OAuth Protected Resource Metadata Registration
-     7.6.  Media Type Registration
-     7.7.  WebSocket Subprotocol Registration
-     7.8.  Well-Defined Scope
-   8.  References
-     8.1.  Normative References
-     8.2.  Informative References
+   4.  Brief Overview of Operation
+   5.  The AAuth Grant Flow
+     5.1.  Step 1: Requesting the Minimal Scope AI Agent Token
+     5.2.  Step 2: Access the Resource
+       5.2.1.  The Scope Challenge
+     5.3.  Step 3: Initiate AAuth Grant Flow with AS
+       5.3.1.  Agent-Supplied Timeout
+     5.4.  Step 4: AS Processes Grant Request
+       5.4.1.  Validating the Scope Challenge
+       5.4.2.  Obtaining Scope Descriptions
+       5.4.3.  Agent Authorization Response
+     5.5.  User Approval
+       5.5.1.  Non-Standardized Approval Techniques
+       5.5.2.  Web Approval Technique
+     5.6.  Token Retrieval
+       5.6.1.  HTTP Polling
+       5.6.2.  Server-Sent Events (SSE)
+       5.6.3.  WebSocket
+     5.7.  Error Handling and Back-Off
+       5.7.1.  Status Codes
+       5.7.2.  Back-Off
+   6.  Discovery Metadata
+     6.1.  Authorization Server Metadata
+     6.2.  Protected Resource Metadata
+   7.  Comparison with hardt-oauth-aauth-protocol
+   8.  Security Considerations
+     8.1.  Trust Model
+     8.2.  On Agent Identity
+     8.3.  Preventing Malicious AI Agents from Altering Reasons and
+            Scopes
+     8.4.  Preventing Malicious AI Agents from Tricking the AS or RS
+     8.5.  Preventing Token Theft via request_code Reuse
+     8.6.  Delivery of Tokens over Push Channels
+     8.7.  Approval Channels and Agent-Mediated Approval
+     8.8.  Rate Limiting and Resource Exhaustion
+     8.9.  Scope Descriptions
+     8.10. Elevated Tokens
+   9.  IANA Considerations
+     9.1.  OAuth URI Registration
+     9.2.  OAuth Parameters Registration
+     9.3.  OAuth Extensions Error Registration
+     9.4.  OAuth Authorization Server Metadata Registration
+     9.5.  OAuth Protected Resource Metadata Registration
+     9.6.  Media Type Registration
+     9.7.  WebSocket Subprotocol Registration
+     9.8.  Well-Defined Scope
+   10. AI Authorship Considerations
+   11. References
+     11.1.  Normative References
+     11.2.  Informative References
    Appendix A.  Scope Descriptions Document
      A.1.  Format
      A.2.  Example
@@ -196,7 +202,7 @@ Table of Contents
    Scope Challenge:  A JWT, signed by the RS, returned to the AI Agent
       when a request exceeds the minimal AI Agent scope.  It carries the
       scopes required to perform the operation and the reason they are
-      required.  Defined in Section 4.2.1.
+      required.  Defined in Section 5.2.1.
 
    request_code:  Opaque handle returned by the AS to correlate an
       agent's request with subsequent token retrieval.
@@ -208,16 +214,63 @@ Table of Contents
       that provides human-readable, localizable descriptions of each
       scope it supports.  Defined in Appendix A.
 
-4.  The AAuth Grant Flow
+4.  Brief Overview of Operation
+
+   This section provides a brief overview of how AAuth works.  It is
+   composed of a new grant flow, a well-defined scope, and a signed
+   object format.
+
+   Firstly, an AI agent initially gets an access token through any of
+   the existing OAuth grant flows.  However - the access token is
+   associated with a specific scope defined by this specification - "ai-
+   agent-minimal".  This scope serves two purposes - (1) it only allows
+   the AI Agent to do a minimum set of operations which are not risky,
+   (2) it informs the resource server that it can execute the AAuth
+   grant flow defined here.  This specification doesn't rely on any kind
+   of new AI Agent identification.
+
+   The AI Agent then tries to perform an operation against the resource
+   server, for which its minimum scope is insufficient.  The resource
+   server rejects the request, and passes a signed object to the AI
+   agent.  This signed object contains the reason - in natural language
+   - for the rejection, with enough detail for a human to decide if its
+   allowed.  The signed object also contains the list of required
+   scopes.
+
+   The AI Agent then connects to the AS to try and obtain a token, and
+   it passes this signed object to the AS.  The AS verifies the
+   signature, and retrieves a natural language description of the scopes
+   from the RS.  It then responds to the AI Agent - informing it that it
+   is seeking approval.  It tells the AI agent to come back later for
+   the token, assuming the user approves.  From there, the AI Agent can
+   poll the AS for the token, or get notified via WebSocket or SSE once
+   it is available.
+
+   The AS then seeks user approval.  It can do that via out-of-band
+   techniques like mobile push notifications, email or text.  It uses
+   the reason text - something like "The AI Agent wants to book a
+   reservation for two at 9pm this Friday at Luigi's.", to provide the
+   user the information they need to decide.  In many cases the AS may
+   not have an out-of-band way to connect to the user.  In such a case,
+   the AS can serve a web page which requests user approval.  The AI
+   Agent can launch a browser to this URL, allowing the user to approve
+   (or reject).  The AS can also use automated techniques - such as an
+   AI Agent that approves or rejects requests on the user's behalf - to
+   determine approval.
+
+   Once the approval has been gained, the AI Agent obtains and token
+   (via the polling, SSE or WebSocket approaches) and then can access
+   the resource.
+
+5.  The AAuth Grant Flow
 
    This flow is modeled on the OAuth 2.0 Device Authorization Grant
-   [RFC8628] but is tailored for confidential agent clients with long-
-   lived identities, and optimized for performant delivery of tokens to
-   the agent.
+   [RFC8628] but is tailored for clients with long-lived identities, and
+   optimized for performant delivery of tokens to the agent.
 
    The flow executes through a series of steps.
 
-4.1.  Step 1: Requesting the Minimal Scope AI Agent Token
+5.1.  Step 1: Requesting the Minimal Scope AI Agent Token
 
    In the first step, the AI Agent requests an access token with very
    limited scope.  This scope has a very specific meaning in the context
@@ -250,7 +303,7 @@ Table of Contents
    access token and the AI Agent can use it in the same way it uses any
    other access token.
 
-4.2.  Step 2: Access the Resource
+5.2.  Step 2: Access the Resource
 
    When the AI Agent accesses a resource on the resource server using
    the minimal AI Agent scope, if the minimal scope associated with the
@@ -264,7 +317,7 @@ Table of Contents
    defined in Section 3 of [RFC6750].  Alongside the scope auth-param
    defined by [RFC6750], the RS includes a new auth-param defined by
    this specification, scope_challenge.  Its value is a Scope Challenge
-   (Section 4.2.1): a JWT, signed by the RS, that carries both the set
+   (Section 5.2.1): a JWT, signed by the RS, that carries both the set
    of scopes required to perform the operation and a reason - a natural
    language explanation of why the minimal AI Agent scope was
    insufficient for this particular operation.  Because the challenge is
@@ -296,7 +349,7 @@ Table of Contents
    invalid_token error as usual, and no Scope Challenge is issued.  The
    RS SHOULD also include the resource_metadata auth-param defined in
    Section 5.1 of [RFC9728], so that the AI Agent and the AS can locate
-   the RS's metadata (Section 5.2).
+   the RS's metadata (Section 6.2).
 
    This exchange is similar in structure to the step-up authentication
    challenge of [RFC9470], in which an RS tells a client that a token
@@ -304,7 +357,7 @@ Table of Contents
    tells the client that additional scopes - and the resource owner's
    approval - are required, and says why.
 
-4.2.1.  The Scope Challenge
+5.2.1.  The Scope Challenge
 
    A Scope Challenge is a JSON Web Token [RFC7519] signed by the
    resource server as a JWS [RFC7515], using a key published in the JWK
@@ -361,7 +414,7 @@ Table of Contents
 
    reason:  REQUIRED.  A human-readable explanation of why the operation
       requires these scopes, suitable for display to the resource owner.
-      See Section 4.2.1.1.
+      See Section 5.2.1.1.
 
    Additional claims MAY be present.  The AS MUST ignore claims it does
    not understand.
@@ -381,7 +434,7 @@ Table of Contents
                 Italian on Friday at 9pm."
    }
 
-4.2.1.1.  Content of the Reason
+5.2.1.1.  Content of the Reason
 
    The quality of the AAuth flow depends on the reason being a concise,
    simple-to-understand explanation of the specific action the AI Agent
@@ -401,7 +454,7 @@ Table of Contents
    SHOULD write the reason in the resource owner's preferred language
    when that is known to it.
 
-4.3.  Step 3: Initiate AAuth Grant Flow with AS
+5.3.  Step 3: Initiate AAuth Grant Flow with AS
 
    Next, the AI Agent initiates the flow defined in this specification
    to obtain a higher scoped, short-lived access token with the set of
@@ -412,7 +465,7 @@ Table of Contents
    from the Scope Challenge; the AI Agent does not supply them
    separately, and cannot modify them.  The location of the agent
    authorization endpoint is published in the AS's metadata
-   (Section 5.1).
+   (Section 6.1).
 
    An example of such a request is:
 
@@ -440,7 +493,7 @@ Table of Contents
       from the RS.
 
    timeout:  OPTIONAL.  The maximum time, in seconds, that the AI Agent
-      is willing to wait for approval.  See Section 4.3.1.
+      is willing to wait for approval.  See Section 5.3.1.
 
    The AI Agent MUST authenticate to the agent authorization endpoint
    using the client authentication method registered for it, as
@@ -448,7 +501,7 @@ Table of Contents
    confidential clients only; an AS MUST reject a request from a public
    client with an unauthorized_client error.
 
-4.3.1.  Agent-Supplied Timeout
+5.3.1.  Agent-Supplied Timeout
 
    An AI Agent often knows how long it can usefully wait for approval -
    for example, because it is itself operating under a deadline set by
@@ -456,7 +509,7 @@ Table of Contents
    parameter in the agent authorization request.
 
    When timeout is present, the AS MUST NOT return an expires_in value
-   (Section 4.4.3) greater than the agent's timeout.  The AS MAY return
+   (Section 5.4.3) greater than the agent's timeout.  The AS MAY return
    a smaller value in accordance with its own policy; the effective
    lifetime of the request is therefore the lower of the two.  When
    timeout is absent, the AS determines the lifetime alone.
@@ -474,16 +527,16 @@ Table of Contents
    owner is not asked to approve an action the AI Agent has already
    abandoned.
 
-4.4.  Step 4: AS Processes Grant Request
+5.4.  Step 4: AS Processes Grant Request
 
    The AS validates the client credentials as per normal OAuth
    processing.
 
-4.4.1.  Validating the Scope Challenge
+5.4.1.  Validating the Scope Challenge
 
    The AS then validates the Scope Challenge.  If any of the following
    checks fails, the AS MUST reject the request with an
-   invalid_scope_challenge error (Section 4.7), except where another
+   invalid_scope_challenge error (Section 5.7), except where another
    error code is stated.
 
    1.  The value MUST parse as a JWS-signed JWT with a typ header
@@ -492,7 +545,7 @@ Table of Contents
    2.  The iss claim MUST identify a resource server that the AS is
        configured to issue tokens for.  The AS MUST NOT process
        challenges from resource servers it does not recognize; see
-       Section 6.2.
+       Section 8.3.
 
    3.  The AS obtains the RS's Protected Resource Metadata from the
        well-known location derived from iss, as described in Section 3
@@ -500,7 +553,7 @@ Table of Contents
        that metadata.  The AS SHOULD cache both documents in accordance
        with the HTTP caching directives they are served with, and MAY
        re-fetch the JWK Set when it encounters an unrecognized kid,
-       subject to rate limiting (Section 6.6).
+       subject to rate limiting (Section 8.8).
 
    4.  The signature MUST verify using a key from that JWK Set, with an
        algorithm acceptable to the AS and, if the RS publishes
@@ -526,14 +579,14 @@ Table of Contents
        it is not, it MUST reject the request with an invalid_scope
        error.
 
-4.4.2.  Obtaining Scope Descriptions
+5.4.2.  Obtaining Scope Descriptions
 
    In order for the approver - whether it is a human or an AI agent
    operating on their behalf - to approve the request for higher scopes,
    natural language descriptions of those scopes are needed.  The AS
    obtains them from the RS's Scope Descriptions Document (Appendix A),
    located through the scope_descriptions_uri member of the RS's
-   Protected Resource Metadata (Section 5.2), or from its own
+   Protected Resource Metadata (Section 6.2), or from its own
    configuration.  The AS SHOULD cache the Scope Descriptions Document
    in accordance with the HTTP caching directives it is served with.
 
@@ -542,11 +595,11 @@ Table of Contents
    unavailable for any scope in the challenge, the AS MUST reject the
    request with an invalid_scope error.
 
-4.4.3.  Agent Authorization Response
+5.4.3.  Agent Authorization Response
 
    Having validated the challenge and obtained a description of each
    scope, the AS creates a pending authorization request, initiates the
-   approval process (Section 4.5), and returns an HTTP 200 (OK) response
+   approval process (Section 5.5), and returns an HTTP 200 (OK) response
    to the AI Agent with a JSON body of the following form:
 
    HTTP/1.1 200 OK
@@ -582,30 +635,30 @@ Table of Contents
       consumed.
 
    token_endpoint:  REQUIRED.  The URL of the AS's token endpoint, which
-      the AI Agent can poll to retrieve the token (Section 4.6.1).
+      the AI Agent can poll to retrieve the token (Section 5.6.1).
 
    expires_in:  REQUIRED.  The lifetime of the request_code in seconds.
       This is the maximum duration the AS is willing to wait for
       approval, and the upper bound on the time for which the AI Agent
       may poll.  When the AI Agent supplied a timeout, this value MUST
-      NOT exceed it (Section 4.3.1).
+      NOT exceed it (Section 5.3.1).
 
    poll_interval:  OPTIONAL.  The minimum interval, in seconds, that the
       AI Agent MUST wait between polling requests.  If absent, the
       default is 5 seconds.  The AS can adjust the interval later using
-      the Retry-After header (Section 4.7).
+      the Retry-After header (Section 5.7).
 
    poll_sse_endpoint:  OPTIONAL.  An https URL at which the AI Agent can
       subscribe to a Server-Sent Events stream that delivers the outcome
-      (Section 4.6.2).
+      (Section 5.6.2).
 
    poll_ws_endpoint:  OPTIONAL.  A wss URL at which the AI Agent can
       open a WebSocket connection that delivers the outcome
-      (Section 4.6.3).
+      (Section 5.6.3).
 
    user_approval_endpoint:  OPTIONAL.  The URL of a page, rendered by
       the AS, through which the resource owner can approve or reject the
-      request.  See Section 4.5.2 and Section 6.5.
+      request.  See Section 5.5.2 and Section 8.7.
 
    The AS MAY support SSE or WebSocket to allow for push-based
    notification once the resource owner has granted permission; it
@@ -619,7 +672,7 @@ Table of Contents
    with an invalid_grant error.  The request_code allows the AS to echo
    state back to itself, for scaling and security reasons.
 
-4.5.  User Approval
+5.5.  User Approval
 
    The AS MUST obtain user approval in order to grant the token.  It may
    do so using the simple approval technique defined here, or employ any
@@ -637,10 +690,10 @@ Table of Contents
    identity of the resource server (for example, the resource_name from
    its metadata), the reason, and the human-readable description of each
    requested scope.  The AS MUST NOT present text supplied directly by
-   the AI Agent.  See Section 6.5 for the properties the approval
+   the AI Agent.  See Section 8.7 for the properties the approval
    channel needs to have.
 
-4.5.1.  Non-Standardized Approval Techniques
+5.5.1.  Non-Standardized Approval Techniques
 
    Examples of how the AS can gain approval include sending the user an
    SMS or email, sending a push notification to the user's mobile
@@ -662,7 +715,7 @@ Table of Contents
    agent whose sole goal is to determine whether or not the approve the
    access.
 
-4.5.2.  Web Approval Technique
+5.5.2.  Web Approval Technique
 
    This specification defines a simple web based approval technique, and
    is OPTIONAL to implement on an AS.  If the AS supports it, it
@@ -689,7 +742,7 @@ Table of Contents
    the approval.  The AI Agent silently awaits approval, using one of
    the token retrieval techniques defined here.
 
-4.6.  Token Retrieval
+5.6.  Token Retrieval
 
    After the agent authorization request has been accepted, the AI Agent
    obtains its access token via one of three techniques: HTTP polling of
@@ -723,7 +776,7 @@ Table of Contents
    short-lived, and its scope MUST NOT exceed the scope of the Scope
    Challenge.
 
-4.6.1.  HTTP Polling
+5.6.1.  HTTP Polling
 
    The AI Agent can retrieve the token by posting to the token endpoint:
 
@@ -776,7 +829,7 @@ Table of Contents
    one issued to another client, or that fail client authentication,
    receive the status codes and error responses defined in Section 5.2
    of [RFC6749] (400, or 401 for invalid_client).  Server-side failures
-   receive 5xx status codes.  Section 4.7 gives the complete mapping.
+   receive 5xx status codes.  Section 5.7 gives the complete mapping.
 
    This departs from [RFC8628], which returns 400 for the
    authorization_pending and slow_down conditions.  Section 5.2 of
@@ -808,13 +861,13 @@ Table of Contents
    subsequent requests presenting that request_code, for at least the
    request_code's original lifetime.
 
-4.6.2.  Server-Sent Events (SSE)
+5.6.2.  Server-Sent Events (SSE)
 
    If the agent authorization response included a poll_sse_endpoint, the
    AI Agent can subscribe to a Server-Sent Events stream [HTML] on which
    the AS delivers the outcome as soon as it is known.
 
-4.6.2.1.  Establishing the Stream
+5.6.2.1.  Establishing the Stream
 
    GET /agent_authorization/sse?request_code=GhiJkl-QRstuVwxyz HTTP/1.1
    Host: auth.example.com
@@ -833,14 +886,14 @@ Table of Contents
       client is being rate-limited, or the request has already been
       denied, has expired, or has been consumed, the AS responds with
       the same status code and JSON body it would return to a polling
-      request (Section 4.6.1, Section 4.7), and does not open a stream.
+      request (Section 5.6.1, Section 5.7), and does not open a stream.
 
    *  Otherwise, the AS responds with a 200 (OK) status, a Content-Type
       of text/event-stream, and Cache-Control: no-store, and begins the
       event stream.  If the request has already been approved, the AS
       delivers the token_response event immediately.
 
-4.6.2.2.  Event Format
+5.6.2.2.  Event Format
 
    Events are formatted as described in [HTML].  Each event carries an
    event field naming the event type and a data field containing a
@@ -871,7 +924,7 @@ Table of Contents
       token was delivered on another channel), or server_error.
       Terminal.
 
-4.6.2.3.  Stream Lifecycle
+5.6.2.3.  Stream Lifecycle
 
    While the stream is open, the AS SHOULD send a comment line (a line
    beginning with a colon) at least every 30 seconds, so that the
@@ -891,14 +944,14 @@ Table of Contents
    NOT send a token_response event for a request_code on which it has
    already sent one; an AI Agent that reconnects after the token was
    delivered receives a 410 (Gone) response, and if it did not receive
-   the token, must restart the flow from Section 4.2.  See Section 6.4.
+   the token, must restart the flow from Section 5.2.  See Section 8.6.
 
    When expires_in elapses while the stream is open, the AS MUST send an
    error event with expired_token and close the connection.  The AS MAY
    close a stream earlier without a terminal event, for example to
    rebalance load; the AI Agent then reconnects as described above.
 
-4.6.2.4.  Example
+5.6.2.4.  Example
 
    event: authorization_pending
    data: {"request_code":"GhiJkl-QRstuVwxyz","expires_in":287}
@@ -926,13 +979,13 @@ Table of Contents
 
                    Figure 4: SSE stream ending in denial
 
-4.6.3.  WebSocket
+5.6.3.  WebSocket
 
    If the agent authorization response included a poll_ws_endpoint, the
    AI Agent can open a WebSocket connection [RFC6455] on which the AS
    delivers the outcome as soon as it is known.
 
-4.6.3.1.  Establishing the Connection
+5.6.3.1.  Establishing the Connection
 
    GET /agent_authorization/ws?request_code=GhiJkl-QRstuVwxyz HTTP/1.1
    Host: auth.example.com
@@ -949,7 +1002,7 @@ Table of Contents
    aauth.agent-flow subprotocol.
 
    The AS evaluates the current state of the request at handshake time,
-   exactly as for SSE: in the conditions listed in Section 4.6.2 under
+   exactly as for SSE: in the conditions listed in Section 5.6.2 under
    which no stream is opened, the AS responds with the corresponding
    HTTP status code and JSON body instead of completing the handshake.
    Otherwise it completes the handshake with a 101 (Switching Protocols)
@@ -957,7 +1010,7 @@ Table of Contents
    the AS does not select this subprotocol, the AI Agent MUST close the
    connection.
 
-4.6.3.2.  Message Format
+5.6.3.2.  Message Format
 
    Every message is a text frame (opcode 0x1) whose payload is exactly
    one JSON object [RFC8259].  The AS MUST NOT send binary frames.  Each
@@ -983,7 +1036,7 @@ Table of Contents
    This specification defines no agent-to-AS data messages.  An AS MUST
    ignore data messages it does not recognize.
 
-4.6.3.3.  Connection Lifecycle
+5.6.3.3.  Connection Lifecycle
 
    While the connection is open, the AS SHOULD send a Ping control frame
    at least every 30 seconds, and the AI Agent MUST respond with a Pong
@@ -1003,13 +1056,13 @@ Table of Contents
    of the request.  As with SSE, the AS MUST NOT send a token_response
    for a request_code on which it has already sent one; an AI Agent that
    lost the connection before receiving the token must restart the flow
-   from Section 4.2.
+   from Section 5.2.
 
    An AS MAY close a connection with status code 1003 (Unsupported Data)
    if it receives a binary frame, or 1008 (Policy Violation) if the AI
    Agent otherwise violates this specification.
 
-4.6.3.4.  Example
+5.6.3.4.  Example
 
    On open:
 
@@ -1033,9 +1086,9 @@ Table of Contents
    {"type":"error","error":"expired_token",
     "error_description":"The request_code has expired."}
 
-4.7.  Error Handling and Back-Off
+5.7.  Error Handling and Back-Off
 
-4.7.1.  Status Codes
+5.7.1.  Status Codes
 
    The AS uses HTTP status codes [RFC9110] to report the outcome of
    requests to the agent authorization endpoint, to the token endpoint
@@ -1126,17 +1179,17 @@ Table of Contents
 
    invalid_scope_challenge is a new error code defined by this
    specification.  It is returned by the agent authorization endpoint
-   when the Scope Challenge fails any of the checks in Section 4.4.1.
+   when the Scope Challenge fails any of the checks in Section 5.4.1.
 
    All error responses that have a body use the format of Section 5.2 of
    [RFC6749] and MUST include Cache-Control: no-store.
 
    Once a stream has been opened, the SSE and WebSocket endpoints report
    terminal outcomes through error events and messages rather than HTTP
-   status codes; the mapping is given in Section 4.6.2 and
-   Section 4.6.3.
+   status codes; the mapping is given in Section 5.6.2 and
+   Section 5.6.3.
 
-4.7.2.  Back-Off
+5.7.2.  Back-Off
 
    The following rules govern the AI Agent's behavior when polling and
    when connecting to push endpoints:
@@ -1169,20 +1222,20 @@ Table of Contents
    The AS SHOULD apply rate limits per client, and SHOULD limit the
    number of concurrent push connections, and of outstanding agent
    authorization requests, per client and per resource owner
-   (Section 6.6).
+   (Section 8.8).
 
-5.  Discovery Metadata
+6.  Discovery Metadata
 
-5.1.  Authorization Server Metadata
+6.1.  Authorization Server Metadata
 
    This specification defines the following OAuth Authorization Server
    Metadata [RFC8414] member:
 
    agent_authorization_endpoint:  URL of the AS's agent authorization
-      endpoint (Section 4.3).  An AS that supports this specification
+      endpoint (Section 5.3).  An AS that supports this specification
       SHOULD publish it.
 
-5.2.  Protected Resource Metadata
+6.2.  Protected Resource Metadata
 
    A resource server that supports this specification publishes OAuth
    Protected Resource Metadata [RFC9728] at the well-known location
@@ -1211,70 +1264,172 @@ Table of Contents
    scope_descriptions_uri:  URL of the RS's Scope Descriptions Document
       (Appendix A).  This URL MUST use the https scheme.
 
-6.  Security Considerations
+7.  Comparison with hardt-oauth-aauth-protocol
 
-6.1.  Client Credentials
+   This specification shares the name aauth with
+   [I-D.hardt-oauth-aauth-protocol], but differs significantly in its
+   approach.
 
-   AI Agents are confidential clients and MUST protect their long-lived
-   credentials.  The security of every step of this flow depends on
-   client authentication: the Scope Challenge is bound to a client, the
-   request_code is bound to a client, and the token is delivered only to
-   that client.  The guidance of [RFC9700] applies.
+   Both documents are aimed at solving the same core issue - how to
+   grant AI Agents access tokens, doing so securely and potentially
+   involving human approvals.  Both have the idea of a minimal baseline
+   access, both deliver tokens to the AI Agent once some kind of
+   approval has been performed, both have the idea of scope
+   descriptions, both use short lived tokens.
 
-6.2.  Integrity of the Reason and Scopes
+   The biggest difference however - is on relationship to OAuth.  This
+   specification is an extension to OAuth, whereas the Hardt draft is a
+   full-on replacement.  The authors believe a faster path to deployment
+   is by riding on the success and widespread deployment of OAuth.
+
+   The protocols also differ in size and complexity.  This document is a
+   more narrow, defining a new grant flow, a well-known scope, and a
+   signed challenge object.  The Hardt draft brings its own agent
+   identity, uses HTTP message signatures, defines new token types, new
+   roles, and introduces the concepts of missions, delegation and
+   federation.  Since it depends on HTTP Message Signatures [RFC9421],
+   it requires that technology to be co-deployed throughout the impacted
+   web infrastructure along with the new AAuth protocol.
+
+   An important technical difference is on who writes the text that the
+   human sees to perform approvals.  In this spec, it is written by the
+   RS, and it is written per operation.  This allows for highly
+   targeted, per API decision making - e.g., "approve my AI Agent to
+   book a table for two at Joe's Italian on Friday at 9pm".  Only the RS
+   can author this level of specificity.  In addition, because the text
+   is written by the RS, and not the AS, it reduces the trust required
+   of the AI Agent.  Indeed, this specification provides cryptographic
+   protections which ensure that the AI Agent cannot manipulate,
+   generate, or alter this reason text in any way.  The authors of this
+   document believe that it is paramount that we do NOT rely on AI
+   Agents for asserting their own reasons for operations when seeking to
+   gain human approval for them.
+
+   By contrast, in the Hardt protocol, the text is written by the agent,
+   as a justification document.  This requires a higher level of trust
+   on the AI Agent, and is also not operation specific.  The Hardt draft
+   does allow for scope descriptions (similar to this document).
+   However, these are not operation specific.
+
+8.  Security Considerations
+
+8.1.  Trust Model
+
+   This specification is built on the core idea that the AI Agent is NOT
+   TRUSTED, and the human user is seeking to gate its access.  The human
+   user does however trust the AS and RS, which is the normal situation
+   with OAuth.
+
+8.2.  On Agent Identity
+
+   There is much ongoing work and discussion on how to identify AI
+   agents on the Internet.  These include WIMSE ((I-D.ietf-wimse-arch))
+   [I-D.ietf-wimse-workload-creds] [I-D.ietf-wimse-wpt], W3C Agent
+   Identity [W3C-AgentId], and arguably WebBotAuth
+   [I-D.ietf-webbotauth-httpsig-protocol].
+
+   This specification does not depend on an authenticated identifier
+   that is unique to AI Agents.  It restricts what the AI Agent can do
+   not by its identity, but rather, by the baseline minimum scope it
+   obtains.
+
+   The AI Agent will normally obtain this minimum scoped token by
+   existing OAuth flows, most likely a combination of the authorization
+   code grant flow or client credentials flow.  In the former case, the
+   AI Agent would be pre-configured to request this scope initially when
+   a user configures it.  This relies on human judgement for the author
+   of the AI Agent (in requesting this scope) and on the resource owner
+   (in approving it) to identify this software as one for which these
+   reduced permissions are required.  It doesn't matter whether the
+   software is ACTUALLY an AI Agent, it only matters whether the level
+   of trust in it is low enough to warrant this minimal scope.
+
+   Similarly, for AI Agents configured through the client credentials
+   grant flow, the human user that configures the clientID and secret
+   are trusted to select this scope as the one it requests.
+
+   Consequently, the security properties afforded by this specification
+   are rooted in the human judgement of the users who author the
+   software, configure it (in the case of client credential grants) or
+   approve its access (in the case of authorization code grants), that
+   the software is one for which this lower level of trust applies.  In
+   our view, this human judgement is a good thing, not a bad one.
+
+   It does however introduce a potential weakness - a malicious AI Agent
+   can still avoid this specification entirely and just request access
+   tokens through existing OAuth grant flows which give it elevated
+   privilege.  That weakness is, unfortunately, the current situation of
+   the world we live in - with AI Agents built before we had the right
+   types of security techniques in place to authorize their access.
+   Consequently, it is not a security flaw in this specification per se.
+
+8.3.  Preventing Malicious AI Agents from Altering Reasons and Scopes
 
    The reason and the scopes are the information on which the resource
    owner bases their decision.  If an AI Agent could alter either, it
    could obtain approval for one action while presenting another - for
    example, by pairing a benign reason with a broader set of scopes.
-   The Scope Challenge prevents this: both values are signed by the RS,
-   which is the authority on what its operations require, and the AS
-   verifies the signature against keys published in the RS's Protected
-   Resource Metadata.  Signing the reason alone would not be sufficient,
-   since an agent could then request additional scopes under cover of a
-   legitimate reason; for this reason the scopes and the reason are
-   bound together in a single signed object.
+   This specification does not trust the AI Agent to pass these
+   unaltered.  As a result, it protects them with the signatures on the
+   scope challenge.
 
-   The AS MUST accept Scope Challenges only from resource servers it is
-   configured to serve.  An AS that accepted challenges from any
-   resource identifier would allow an attacker to stand up a resource
-   server of their own and use the AS's approval user interface to
-   deliver arbitrary text to the AS's users, lending it the AS's
-   credibility.
+   The signature uses keys shared between the AS and RS, and require no
+   trust in the AI Agent.  This ensures the AI Agent cannot manipulate
+   keying material to adjust signatures.
 
-   The client_id claim binds the challenge to the AI Agent that
-   encountered the refusal, so that a challenge obtained by one client
-   cannot be redeemed by another.  The sub claim binds it to the
+   The signature covers the reason and the required scopes, not just one
+   of them alone.  This prevents an attack wherein a malicious AI Agent
+   could modify the scopes to be larger, with a reason that seems to
+   imply lesser scopes.
+
+8.4.  Preventing Malicious AI Agents from Tricking the AS or RS
+
+   A potential attack from a malicious AI Agent is one in which it
+   colludes with a malicious AS in order to obtain tokens which can be
+   used against an RS it wishes to access.  Similarly, a malicous AI
+   Agent might try to fool a legitimate AS into issuing tokens by
+   creating its own scope challenges, and getting the AS to sign them.
+
+   This is preventing by requiring that the AS only accept Scope
+   Challenges from resource servers it is configured to serve.
+   Similarly, the client_id claim binds the challenge to the AI Agent
+   that encountered the refusal, so that a challenge obtained by one
+   client cannot be redeemed by another.  The sub claim binds it to the
    resource owner whose token was presented, so that an AI Agent cannot
    cause a different resource owner to be prompted.  The jti claim and
    the short exp prevent a single challenge from being used to generate
    repeated approval prompts.
 
-   The AS trusts the RS for the content of the reason and of the scope
-   descriptions.  Even so, both are text that will be displayed to a
-   person.  The AS MUST render them as plain text, MUST NOT interpret
-   markup in them, and SHOULD apply the same precautions against
-   spoofing (for example, through bidirectional override characters)
-   that it applies to any other externally supplied display string.
+8.5.  Preventing Token Theft via request_code Reuse
 
-6.3.  request_code
+   A malicious agent might try to reuse a request code which generated a
+   previous approval to obtain a new token.  Or, it might try to attack
+   web infratructure to obtain previously used request_code values which
+   produced a token.
 
-   A request_code is a bearer handle to a pending approval and, once
-   approved, to a token.  It is protected by client authentication on
-   every endpoint at which it is presented, so that the request_code
-   alone is insufficient to retrieve a token; by sufficient entropy to
-   resist guessing; by a short lifetime; and by single use.
+   Request code reuse is prevented in several ways.
 
-   The SSE and WebSocket endpoints receive the request_code in the query
+   First - it is protected by client authentication on every endpoint at
+   which it is presented, so that the request_code alone is insufficient
+   to retrieve a token.  Only the same agent which initially tried to
+   access the resource (and was challenged) can reuse the code.  These
+   attacks are further limited because the codes require sufficient
+   entropy to resist guessing.  They are short-lived (single use) which
+   limits their ability to be reused should they be revealed.
+
+   There is certainly some risk of request_code's being leaked.  The SSE
+   and WebSocket endpoints receive the request_code in the query
    component of the request URI, which is more likely than a request
    body to be recorded in server, proxy, and client logs.  The AS and AI
    Agents SHOULD NOT log request_code values, and operators SHOULD
-   configure intermediaries accordingly.
+   configure intermediaries accordingly.  This is admittedly a difficult
+   requirement to implement, and this is why additional security
+   measures noted above are applied to them.
 
    The request_code SHOULD NOT be exposed to the resource owner or to a
-   browser; see Section 6.5.
+   browser; see Section 8.7.
 
-6.4.  Delivery of Tokens over Push Channels
+8.6.  Delivery of Tokens over Push Channels
 
    Delivering the access token over an SSE stream or a WebSocket
    connection is as secure as delivering it in a token endpoint
@@ -1291,138 +1446,154 @@ Table of Contents
    *  The AS MUST verify that the request_code was issued to the
       authenticated client.
 
-   *  The AS MUST deliver the token at most once.  Because the AS cannot
-      know whether a pushed message was received before a connection was
-      lost, an AI Agent that loses the connection during delivery loses
-      the token and must restart the flow.  This is deliberate: the
-      alternative, redelivering on reconnection, would make the token
-      retrievable more than once.
+   *  The AS MUST deliver the token at most once over a push connection.
+      Because the AS cannot know whether a pushed message was received
+      before a connection was lost, an AI Agent that loses the
+      connection during delivery loses the token and must restart the
+      flow.
 
    *  The AS MUST close the connection after delivering a terminal
       event.
 
-   Two limitations of push delivery are worth noting.  First, sender-
-   constrained tokens: a token delivered in a token endpoint response
-   can be bound to a DPoP proof [RFC9449] presented with the request.
-   No equivalent proof accompanies a pushed token, and this
-   specification does not define a profile for binding a token to a
-   proof presented when the push connection was established.
-   Deployments that require DPoP-bound tokens MUST deliver them through
-   the token endpoint (Section 4.6.1).  Tokens bound to a client
-   certificate [RFC8705] MAY be delivered over a push connection
-   established with that certificate.  Second, delivery confirmation: a
-   token endpoint response is part of a request/response exchange, so
-   the AS knows whether the token was delivered; a push is not.
+   That said - there is an important limitation with push-based tokens.
+   A token delivered in a token endpoint response can be bound to a DPoP
+   proof [RFC9449] presented with the request.  No equivalent proof
+   accompanies a pushed token.  Tokens bound to a client certificate
+   [RFC8705] can be delivered over a push connection established with
+   that certificate.
 
    Push connections are long-lived, and are often routed through
-   different infrastructure - load balancers, connection-holding proxies
-   - than ordinary API requests.  Infrastructure that terminates TLS
-   sees the token in cleartext, and MUST NOT log or buffer frame
-   payloads in a way that retains tokens.
+   different infrastructure.  Infrastructure that terminates TLS sees
+   the token in cleartext, and MUST NOT log or buffer frame payloads in
+   a way that retains tokens.
 
-   Editor's note: because of these limitations, a future revision of
-   this specification may restrict the push channels to notifying the AI
-   Agent that the request has been decided, with the token itself always
-   retrieved from the token endpoint.
+8.7.  Approval Channels and Agent-Mediated Approval
 
-6.5.  Approval Channels and Agent-Mediated Approval
+   As noted at the top of this section - a key goal of the AAuth flow is
+   that it does not require trust in the AI Agent.
 
-   The security of this grant rests on the approval being made by the
-   resource owner, or by a policy agent acting for them, and not by the
-   AI Agent whose access is being decided.  An approval channel that the
-   AI Agent can observe or operate does not provide this property.  This
-   deserves particular attention for AI Agents, since many are capable
-   of driving a web browser or other user interface: an agent that can
-   open a browser to an approval page can, in general, also activate the
-   "approve" control on that page.
+   There is one part of the flow where this is not exactly true - the
+   web approval feature.  With this feature, the AS sends the AI Agent a
+   URL that it can use to launch a browser for the user to gain
+   approval.  A malicious AI Agent could do any number of things - it
+   could launch the browser and use remote-control techniques to click
+   "approve".  Or, it could fetch the contents itself, and launch a
+   browser to a fake page which presents misleading information.
 
-   For this reason, the AS SHOULD obtain approval through a channel that
-   it establishes with the resource owner directly, independent of the
-   AI Agent - for example a push notification to an application the AS
-   has previously enrolled, a message to a verified address, or an
-   authenticated session in the AS's own user interface.  The AS has
-   such a relationship with the resource owner by construction: it
-   authenticated them when it issued the minimal-scope token, and the
-   Scope Challenge identifies them through its sub claim.
+   These attacks are partly mitigated by good security practices on AI
+   Agent usage on user desktops.  A user that grants permission for an
+   AI Agent to control its browser - with cached session tokens,
+   cookies, and so on - is exposing themselves to a lot of risk.  If the
+   user has not allowed an AI Agent to control its browser, many of the
+   worst attacks are removed.  That said, if the AI Agent doesn't
+   possess user's credentials to log into the AS, the AI Agent will not
+   be able to perform the attack without the user manually entering
+   credentials.  Modern web security features, such as passcodes and
+   password managers protect against the malicious AI Agent from taking
+   the use to a fraudulent site.  However, if the AI agent has browser
+   controls, it could await user password entry and then auto-click on
+   approval.
 
-   When the Web Approval Technique (Section 4.5.2) is used and the
-   approval URL is returned to the AI Agent, the following
-   considerations apply:
+   If the AI Agent doesn't have browser control, but only launches
+   browser tabs, could attempt to launch the user to a malicious AS
+   approval page.  However, that AS would not be able to create tokens
+   that will be accepted by the RS, limiting the efficacy of this
+   attack.
 
-   *  The AI Agent is placed in the path between the AS and the resource
-      owner.  A malicious or compromised agent can suppress the URL,
-      substitute a look-alike page that captures the resource owner's AS
-      credentials, or display the genuine page inside a user interface
-      it controls.  Resource owners who become accustomed to following
-      approval links supplied by agents also become easier to phish by
-      other means.  This is the same class of risk described in
-      Section 5.4 of [RFC8628], where it is accepted because a device
-      may have no other channel to the user; an AS implementing this
-      specification does have another channel.
+   The best protections against malicious AI Agents happen by keeping
+   the AI Agent out of the loop entirely.  This works with an AS that
+   has an easy way to reach the user - push notifications and SMS being
+   ideal.  However, we anticipate many cases where the AS has no easy
+   and quick way to reach the user, in which case the web approval flow
+   will be used.
 
-   *  The approval URL SHOULD NOT contain the request_code.  The
-      request_code is the handle through which the token is retrieved
-      and should be known only to the AI Agent and the AS.  An AS SHOULD
-      instead use a distinct, single-use, user-facing identifier bound
-      to the request, analogous to the user_code of [RFC8628].
+   There are also good practices the AS can follow in the approval page
+   to further limit risks:
 
-   *  The AS MUST authenticate the resource owner at the approval page,
-      and MUST verify that the authenticated user is the subject
-      identified by the Scope Challenge.  It SHOULD require a fresh
-      authentication that includes a user-presence check (for example, a
-      WebAuthn assertion) immediately before recording the approval;
-      this reduces the risk that an automated agent operating the
-      browser can approve on the resource owner's behalf.
+   1.  Approval MUST require an explicit user action, MUST be protected
+       against cross-site request forgery, and MUST NOT be possible
+       through a GET request.  The page MUST NOT be embeddable in a
+       frame (for example, through a Content Security Policy of frame-
+       ancestors 'none').
 
-   *  Approval MUST require an explicit user action, MUST be protected
-      against cross-site request forgery, and MUST NOT be possible
-      through a GET request.  The page MUST NOT be embeddable in a frame
-      (for example, through a Content Security Policy of frame-ancestors
-      'none').
+   2.  The page MUST display the client's registered name, the resource
+       server, the reason, and the description of each scope, taken from
+       the validated Scope Challenge and the AS's own records, and MUST
+       NOT display text supplied by the AI Agent.
 
-   *  The page MUST display the client's registered name, the resource
-      server, the reason, and the description of each scope, taken from
-      the validated Scope Challenge and the AS's own records, and MUST
-      NOT display text supplied by the AI Agent.
+   3.  For highly secure operations, the page SHOULD require the user to
+       re-authenticate with their credentials
 
-6.6.  Rate Limiting and Resource Exhaustion
+8.8.  Rate Limiting and Resource Exhaustion
+
+   Because this specification makes use of polling, the AS needs to take
+   steps to make sure it doesnt subject itself to a self-inflicted DoS
+   attack.  But more importantly, it needs to make sure it doesnt
+   generate a flood of approvals to the human user.
 
    The AS SHOULD rate-limit polling and push connections per client,
-   returning 429 as described in Section 4.7.  It SHOULD limit the
+   returning 429 as described in Section 5.7.  It SHOULD limit the
    number of simultaneous push connections per client and per
-   request_code, and SHOULD limit the number of outstanding approval
-   requests per client and per resource owner, since each approval
-   request may result in a notification to a person.  The jti of the
-   Scope Challenge ensures that each challenge can create at most one
-   request.
+   request_code.
 
    Validation of a Scope Challenge may cause the AS to fetch an RS's
    metadata and JWK Set. The AS SHOULD cache these, and SHOULD rate-
    limit re-fetches triggered by unrecognized kid values, so that an AI
    Agent cannot cause the AS to make unbounded outbound requests.
 
-6.7.  Scope Descriptions
+   To avoid flooding the user, the AS MUST limit the number of
+   outstanding approval requests per combination of client (the AI
+   Agent) and per resource owner (the user).  The jti of the Scope
+   Challenge ensures that each challenge can create at most one request.
 
-   Scope descriptions are published by the RS and displayed to resource
-   owners.  They SHOULD describe the effect of a scope in terms the
-   resource owner can act on, and SHOULD NOT expose sensitive details of
-   the RS's implementation.  The AS MUST render them as plain text, as
-   it does the reason (Section 6.2).
+8.9.  Scope Descriptions
 
-6.8.  Elevated Tokens
+   Scope descriptions are an essential part of the security of the
+   solution.  They are consumed by humans - or AI Agents operating on
+   their behalf.  This means that they need to contain sufficient
+   explanatory text to allow either of those actors to make a good
+   decision.
 
-   Tokens issued through this grant are approved for a specific action,
-   described by the reason.  The AS SHOULD issue them with a short
-   lifetime, and SHOULD NOT issue a refresh token with them: an AI Agent
-   that needs to perform the action again, or to perform a further
-   action, should obtain a new approval.  In contrast to Token Exchange
-   [RFC8693], in which a client obtains a new token without resource
-   owner involvement, every token issued through this grant corresponds
-   to an approval.
+   In addition, because they are fairly public, they shouldn't expose
+   any sensitive information about the RS behavior.
 
-7.  IANA Considerations
+8.10.  Elevated Tokens
 
-7.1.  OAuth URI Registration
+   Just because a user approves an action an AI agent takes once, does
+   not mean they would approve further actions which involve the same
+   set of scopes.
+
+   For example, take again our use case of a dinner reservation.  If the
+   an AI Agent is trying to book a dinner for a user, and requires a
+   "write" scope to do so, the user might approve that operation.  Later
+   on, the AI Agent might decide to modify the dinner, reducing the
+   number of guests from 5 to 1.  This is something the user might not
+   approve, but the AI could do so with the same token scope ("write")
+   it obtained previously.
+
+   As a result, the efficacy of the AAuth flow relies on the tokens
+   being short-lived - generally long enough for the AI Agent to hit a
+   number of API endpoints in a row to achieve a specified operation,
+   but not longer.
+
+   The exact amount of time for the lifetime of the token is somewhat
+   dependent on the resource server and what APIs it exposes.  As a
+   general rule of thumb, 10 seconds to a minute is a reasonable amount
+   of time.
+
+   OPEN ISSUE - Even better security can be achieved if the AS is able
+   to issue tokens which are bound to the specific operation associated
+   with the reason phrase.  Should we enhance the challenge to include
+   API endpoints so that the AS can construct a token that actually
+   specifies the specific API endpoints and values?  Or is this too
+   complicated?  It will result in massively large tokens.
+
+   For similar reasons, an AS compliant to this specification SHOULD NOT
+   issue refresh tokens.
+
+9.  IANA Considerations
+
+9.1.  OAuth URI Registration
 
    This specification registers the following value in the "OAuth URI"
    sub-registry of the "OAuth Parameters" registry:
@@ -1435,24 +1606,24 @@ Table of Contents
 
    *  Specification Document: this document
 
-7.2.  OAuth Parameters Registration
+9.2.  OAuth Parameters Registration
 
    This specification registers the following values in the "OAuth
    Parameters" registry established by [RFC6749]:
 
    *  Parameter name: scope_challenge; Parameter usage location: agent
       authorization request; Change controller: IETF; Specification
-      document: Section 4.3 of this document.
+      document: Section 5.3 of this document.
 
    *  Parameter name: timeout; Parameter usage location: agent
       authorization request; Change controller: IETF; Specification
-      document: Section 4.3.1 of this document.
+      document: Section 5.3.1 of this document.
 
    *  Parameter name: request_code; Parameter usage location: token
       request; Change controller: IETF; Specification document:
-      Section 4.6.1 of this document.
+      Section 5.6.1 of this document.
 
-7.3.  OAuth Extensions Error Registration
+9.3.  OAuth Extensions Error Registration
 
    This specification registers the following value in the "OAuth
    Extensions Error" registry established by [RFC6749]:
@@ -1465,9 +1636,9 @@ Table of Contents
 
    *  Change controller: IETF
 
-   *  Specification document: Section 4.7 of this document
+   *  Specification document: Section 5.7 of this document
 
-7.4.  OAuth Authorization Server Metadata Registration
+9.4.  OAuth Authorization Server Metadata Registration
 
    This specification registers the following value in the "OAuth
    Authorization Server Metadata" registry established by [RFC8414]:
@@ -1478,9 +1649,9 @@ Table of Contents
 
    *  Change controller: IETF
 
-   *  Specification document: Section 5.1 of this document
+   *  Specification document: Section 6.1 of this document
 
-7.5.  OAuth Protected Resource Metadata Registration
+9.5.  OAuth Protected Resource Metadata Registration
 
    This specification registers the following value in the "OAuth
    Protected Resource Metadata" registry established by [RFC9728]:
@@ -1492,17 +1663,17 @@ Table of Contents
 
    *  Change controller: IETF
 
-   *  Specification document: Section 5.2 of this document
+   *  Specification document: Section 6.2 of this document
 
-7.6.  Media Type Registration
+9.6.  Media Type Registration
 
    This specification registers the application/scope-challenge+jwt
    media type in the "Media Types" registry, for use as the typ header
    parameter value scope-challenge+jwt of a Scope Challenge
-   (Section 4.2.1).  The registration follows the template of [RFC7519]
-   for application/jwt, with the security considerations of Section 6.2.
+   (Section 5.2.1).  The registration follows the template of [RFC7519]
+   for application/jwt, with the security considerations of Section 8.3.
 
-7.7.  WebSocket Subprotocol Registration
+9.7.  WebSocket Subprotocol Registration
 
    This specification registers the following value in the "WebSocket
    Subprotocol Name" registry established by [RFC6455]:
@@ -1511,17 +1682,27 @@ Table of Contents
 
    *  Subprotocol Common Name: AAuth Agent Authorization Flow
 
-   *  Subprotocol Definition: Section 4.6.3 of this document
+   *  Subprotocol Definition: Section 5.6.3 of this document
 
-7.8.  Well-Defined Scope
+9.8.  Well-Defined Scope
 
    There is no IANA registry for OAuth scope values.  The ai-agent-
-   minimal scope is defined by this specification (Section 4.1) and
+   minimal scope is defined by this specification (Section 5.1) and
    requires no registration.
 
-8.  References
+10.  AI Authorship Considerations
 
-8.1.  Normative References
+   The explanatory and descriptive prose was authored by human hands.
+   AI assistance was used in the generation of protocol elements,
+   tables, JSON documents, signatures, and detailed error code and
+   protocol handling.  AI was also used in the generation of much of the
+   content in the security and IANA considerations sections, however the
+   resulting text was heavily edited by human hands for clarity and
+   style.
+
+11.  References
+
+11.1.  Normative References
 
    [HTML]     WHATWG, "HTML Living Standard - Server-sent events", n.d.,
               <https://html.spec.whatwg.org/multipage/server-sent-
@@ -1607,7 +1788,13 @@ Table of Contents
               DOI 10.17487/RFC9728, April 2025,
               <https://www.rfc-editor.org/rfc/rfc9728>.
 
-8.2.  Informative References
+11.2.  Informative References
+
+   [I-D.hardt-oauth-aauth-protocol]
+              Hardt, D., "AAuth Protocol", Work in Progress, Internet-
+              Draft, draft-hardt-oauth-aauth-protocol-11, 25 September
+              2026, <https://datatracker.ietf.org/doc/html/draft-hardt-
+              oauth-aauth-protocol-11>.
 
    [I-D.ietf-oauth-v2-1]
               Hardt, D., Parecki, A., and T. Lodderstedt, "The OAuth 2.1
@@ -1615,6 +1802,36 @@ Table of Contents
               Draft, draft-ietf-oauth-v2-1-17, 30 October 2026,
               <https://datatracker.ietf.org/doc/html/draft-ietf-oauth-
               v2-1-17>.
+
+   [I-D.ietf-webbotauth-httpsig-protocol]
+              Meunier, T. and S. Major, "HTTP Message Signatures for
+              automated traffic", Work in Progress, Internet-Draft,
+              draft-ietf-webbotauth-httpsig-protocol-01, 29 October
+              2026, <https://datatracker.ietf.org/doc/html/draft-ietf-
+              webbotauth-httpsig-protocol-01>.
+
+   [I-D.ietf-wimse-arch]
+              Salowey, J. A., Rosomakho, Y., and H. Tschofenig,
+              "Workload Identity in a Multi System Environment (WIMSE)
+              Architecture", Work in Progress, Internet-Draft, draft-
+              ietf-wimse-arch-08, 6 July 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-wimse-
+              arch-08>.
+
+   [I-D.ietf-wimse-workload-creds]
+              Campbell, B., Salowey, J. A., Schwenkschuster, A.,
+              Sheffer, Y., and Y. Rosomakho, "WIMSE Workload
+              Credentials", Work in Progress, Internet-Draft, draft-
+              ietf-wimse-workload-creds-03, 30 October 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-wimse-
+              workload-creds-03>.
+
+   [I-D.ietf-wimse-wpt]
+              Campbell, B. and A. Schwenkschuster, "WIMSE Workload Proof
+              Token", Work in Progress, Internet-Draft, draft-ietf-
+              wimse-wpt-02, 27 August 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-wimse-
+              wpt-02>.
 
    [OIDC]     Sakimura, N., Bradley, J., Jones, M., de Medeiros, B., and
               C. Mortimore, "OpenID Connect Core 1.0 incorporating
@@ -1649,6 +1866,10 @@ Table of Contents
               Access Tokens", RFC 9068, DOI 10.17487/RFC9068, October
               2021, <https://www.rfc-editor.org/rfc/rfc9068>.
 
+   [RFC9421]  Backman, A., Ed., Richer, J., Ed., and M. Sporny, "HTTP
+              Message Signatures", RFC 9421, DOI 10.17487/RFC9421,
+              February 2024, <https://www.rfc-editor.org/rfc/rfc9421>.
+
    [RFC9449]  Fett, D., Campbell, B., Bradley, J., Lodderstedt, T.,
               Jones, M., and D. Waite, "OAuth 2.0 Demonstrating Proof of
               Possession (DPoP)", RFC 9449, DOI 10.17487/RFC9449,
@@ -1664,18 +1885,22 @@ Table of Contents
               RFC 9700, DOI 10.17487/RFC9700, January 2025,
               <https://www.rfc-editor.org/rfc/rfc9700>.
 
+   [W3C-AgentId]
+              "Agent Identity Registry Protocol Community Group", n.d.,
+              <https://www.w3.org/groups/cg/agent-identity/>.
+
 Appendix A.  Scope Descriptions Document
 
    This appendix defines the format of the Scope Descriptions Document
-   that an RS publishes at its scope_descriptions_uri (Section 5.2), and
+   that an RS publishes at its scope_descriptions_uri (Section 6.2), and
    gives a JSON Schema [I-D.bhutton-json-schema] for it.
 
-   Note: Human-readable, localizable scope descriptions published by the
-   resource server are useful well beyond this specification.  Any
-   consent user interface, and any client that explains to a user what
-   it is asking for, has the same need.  It may make sense to publish
-   this format as its own OAuth extension, with this specification
-   simply referencing it.  Feedback on that question is welcome.
+   OPEN ISSUE: Human-readable, localizable scope descriptions published
+   by the resource server are useful well beyond this specification.
+   Any consent user interface would need this.  It may make sense to
+   publish this format as its own OAuth extension, with this
+   specification simply referencing it.  Feedback on that question is
+   welcome.
 
 A.1.  Format
 
