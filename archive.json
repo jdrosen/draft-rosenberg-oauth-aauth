@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-01T03:20:44.453712+00:00",
+  "timestamp": "2026-11-03T04:39:18.243565+00:00",
   "repo": "jdrosen/draft-rosenberg-oauth-aauth",
   "labels": [
     {
@@ -55,5 +55,76 @@
     }
   ],
   "issues": [],
-  "pulls": []
+  "pulls": [
+    {
+      "number": 1,
+      "id": "PR_kwDOVcSl_s8AAAABMEkrGA",
+      "title": "Signed Scope Challenge, SSE/WS frame specs, HTTP status codes, agent timeout, and scope description schema",
+      "url": "https://github.com/jdrosen/draft-rosenberg-oauth-aauth/pull/1",
+      "state": "MERGED",
+      "author": "patwhite",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "## Summary\n\nThis PR addresses a batch of review items on the initial text: typo and contact fixes, signing the reason, proper frame specifications for the SSE and WebSocket transports, HTTP status codes that convey state without parsing the body, an agent-supplied timeout, a JSON Schema for scope descriptions, and two security reviews whose conclusions are written into Security Considerations.\n\n- **Rendered draft:** https://patwhite.github.io/draft-rosenberg-oauth-aauth/spec-tweaks-security-bc65af22/draft-rosenberg-oauth-aauth.html\n- **rfcdiff against main:** https://author-tools.ietf.org/api/iddiff?url_1=https://patwhite.github.io/draft-rosenberg-oauth-aauth/draft-rosenberg-oauth-aauth.txt&url_2=https://patwhite.github.io/draft-rosenberg-oauth-aauth/spec-tweaks-security-bc65af22/draft-rosenberg-oauth-aauth.txt\n\n## Changes\n\n- **Scope Challenge (Steps 2 through 4).** The RS now returns a signed JWT in the `WWW-Authenticate` header carrying the required scopes and the reason together, bound to the client, the resource owner, a `jti`, and a short `exp`. The AS verifies it against keys from the RS's RFC 9728 Protected Resource Metadata. This resolves the TODO about agents tampering with the reason or scopes. Signing the reason alone would not be enough, since an agent could pair a benign reason with broader scopes.\n- **Agent-supplied `timeout` (4.3.1).** OPTIONAL. `expires_in` must not exceed it, and the AS may reject a value it cannot meet.\n- **Token endpoint status codes (4.6.1).** 200 token issued, 202 pending, 403 denied, 410 expired or consumed, 429 slow_down. Core RFC 6749 errors keep 400 and 401.\n- **SSE and WebSocket frame specs (4.6.2, 4.6.3).** Handshake, the `authorization_pending`, `token_response`, and `error` events, keepalives, close codes, and reconnection. Connect-time state is reported with the same HTTP status codes as polling. Push connections require the same client authentication as the token endpoint; the previous examples used an undefined `agent_jwt` bearer.\n- **Error handling and back-off (4.7).** Full status code table: 429 for rate limiting, 5xx for server faults, 410 after expiry or consumption, Retry-After rules, and agent back-off behavior.\n- **Discovery metadata (5).** New `agent_authorization_endpoint` (RFC 8414) and `scope_descriptions_uri` (RFC 9728) members. The former `/.well-known/aauth.json` is replaced by RFC 9728, which already provides the well-known location, `jwks_uri`, `resource_name`, and `authorization_servers`. Scope descriptions are the only genuinely new piece.\n- **Appendix A: Scope Descriptions Document.** Format with BCP 47 localizations and an optional risk level, a JSON Schema (2020-12, validated against the example), and a note that this may belong in its own extension.\n- **Security Considerations (6).** Challenge integrity, request_code handling, push-channel token delivery, approval-channel independence, rate limiting, and elevated token lifetime.\n- **IANA (7).** Grant type URN, parameters, the `invalid_scope_challenge` error, AS and RS metadata members, the `application/scope-challenge+jwt` media type, and the `aauth.agent-flow` subprotocol. Also notes that there is no IANA registry for scope values.\n- Fixed the Step 1 heading typo and Pat's email. \"Step 4\" was a subsection of Step 3 and is now a peer, so sections after 4.3 renumber by one.\n\n## Open questions\n\n1. **Whose approval?** Step 3 carries only client credentials, so a multi-user agent gives the AS no way to tell which delegation a request belongs to. This PR has the RS put the AS's subject identifier in the challenge as `sub`. If an agent's `client_id` is always bound to a single delegation, `sub` can become OPTIONAL. The alternative is for the agent to present its minimal-scope token, RFC 8693 style.\n2. **Approval channel.** Section 6.5 argues that approval should happen out of band, through a channel the agent can neither observe nor operate, and lists the minimum bar if `user_approval_endpoint` stays. The Web Approval section itself is unchanged pending that decision.\n3. **Push channels.** Pushing the token over SSE or WebSocket is safe under the conditions now in 4.6 and 6.4, but it precludes DPoP binding and gives no delivery confirmation. An editor's note in 6.4 floats making push notification-only: notify, then redeem at the token endpoint.\n4. **RFC 9728** as the RS metadata base in place of `aauth.json`.\n\nNot touched: typos outside the rewritten sections, the template keywords, and the abstract's mention of a comparison with a non-backwards-compatible design.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-01T06:36:17Z",
+      "updatedAt": "2026-11-01T14:25:31Z",
+      "baseRepository": "jdrosen/draft-rosenberg-oauth-aauth",
+      "baseRefName": "main",
+      "baseRefOid": "58e92ddf08ed69182672006d59ffb99bcf826517",
+      "headRepository": "patwhite/draft-rosenberg-oauth-aauth",
+      "headRefName": "spec-tweaks-security-bc65af22",
+      "headRefOid": "c981fe7bfef39f05b6a02eaa5500a2865010f0ac",
+      "closedAt": "2026-11-01T14:25:31Z",
+      "mergedAt": "2026-11-01T14:25:31Z",
+      "mergedBy": "jdrosen",
+      "mergeCommit": {
+        "oid": "48414c1729739412ab4f1bba5079525cc9248e17"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOVcSl_s8AAAABVXM-rQ",
+          "commit": {
+            "abbreviatedOid": "c981fe7"
+          },
+          "author": "jdrosen",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "Generally this is really good. Clearly a lot of AI help in this. The security considerations section is too much clearly generated by AI. I am going to accept the PR and put a bit more human touch on that section in a follow on PR. ",
+          "createdAt": "2026-11-01T14:25:14Z",
+          "updatedAt": "2026-11-01T14:25:14Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "id": "PR_kwDOVcSl_s8AAAABMInctQ",
+      "title": "Add overview; revise sec-considerations; add hardt comparison.",
+      "url": "https://github.com/jdrosen/draft-rosenberg-oauth-aauth/pull/2",
+      "state": "MERGED",
+      "author": "jdrosen",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-11-01T16:32:13Z",
+      "updatedAt": "2026-11-01T16:35:16Z",
+      "baseRepository": "jdrosen/draft-rosenberg-oauth-aauth",
+      "baseRefName": "main",
+      "baseRefOid": "48414c1729739412ab4f1bba5079525cc9248e17",
+      "headRepository": "jdrosen/draft-rosenberg-oauth-aauth",
+      "headRefName": "explanatory-additions",
+      "headRefOid": "dcfb66a13f82fbce9f4ee0fdcdd66f4719e3d8d2",
+      "closedAt": "2026-11-01T16:35:16Z",
+      "mergedAt": "2026-11-01T16:35:16Z",
+      "mergedBy": "jdrosen",
+      "mergeCommit": {
+        "oid": "5ecddfc4f3d5bfd782a5feeed7587dc179c7e0c5"
+      },
+      "comments": [],
+      "reviews": []
+    }
+  ]
 }
