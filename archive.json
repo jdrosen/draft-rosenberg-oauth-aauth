@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-17T05:46:28.608904+00:00",
+  "timestamp": "2026-11-19T05:05:50.711415+00:00",
   "repo": "jdrosen/draft-rosenberg-oauth-aauth",
   "labels": [
     {
@@ -54,7 +54,24 @@
       "color": "ffffff"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "number": 3,
+      "id": "I_kwDOVcSl_s8AAAABgewHOQ",
+      "title": "Question about the agent authorization endpoint in Section 5.3",
+      "url": "https://github.com/jdrosen/draft-rosenberg-oauth-aauth/issues/3",
+      "state": "OPEN",
+      "author": "NiYuan224",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Thank you for the presentation today. I\u2019m interested in the approach of requesting additional permissions when needed.\n\nI\u2019d like to better understand the endpoint design in Section 5.3. Was extending the existing token endpoint to accept the scope challenge considered as an alternative to introducing a separate agent authorization endpoint?\n\nI may be missing some context, and I\u2019d appreciate your thoughts on this.",
+      "createdAt": "2026-11-18T19:09:16Z",
+      "updatedAt": "2026-11-18T19:09:16Z",
+      "closedAt": null,
+      "comments": []
+    }
+  ],
   "pulls": [
     {
       "number": 1,
