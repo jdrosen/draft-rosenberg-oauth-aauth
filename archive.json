@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-19T05:05:50.711415+00:00",
+  "timestamp": "2026-11-22T04:07:46.044133+00:00",
   "repo": "jdrosen/draft-rosenberg-oauth-aauth",
   "labels": [
     {
@@ -140,6 +140,32 @@
       "mergeCommit": {
         "oid": "5ecddfc4f3d5bfd782a5feeed7587dc179c7e0c5"
       },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 4,
+      "id": "PR_kwDOVcSl_s8AAAABQiCceA",
+      "title": "Make the Scope Challenge opaque; reference txn-challenge, RAR, and DTR",
+      "url": "https://github.com/jdrosen/draft-rosenberg-oauth-aauth/pull/4",
+      "state": "OPEN",
+      "author": "patwhite",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Incorporates the feedback from yesterday's presentation.\n\n## Summary\n\n- **Challenge format is now opaque and format-neutral.** The Scope Challenge is produced by the RS and consumed by the AS; its format is a matter of agreement between them, and the agent relays it unmodified. The spec no longer defines JWT claims, a validation checklist, a `jwks_uri` requirement, or a media type. Instead, the Scope Challenge section states what any format must convey (RS and AS identity, validity period and unique identifier, client and subject binding, required access as scopes and/or `authorization_details`, and the reason), and the AS validation section is written in those terms.\n- **Related formats referenced, not adopted.** [draft-rosomakho-oauth-txn-challenge](https://datatracker.ietf.org/doc/draft-rosomakho-oauth-txn-challenge/) (RS-signed JWT with `reason` and RAR details, relayed through the agent) is described in a new Related Work section as one format that meets the requirements. It is an informative reference only; we take no stance on which format an RS and AS use.\n- **RAR integrated.** The challenge may convey required access as `authorization_details` (RFC 9396), with scopes optional alongside. The token response returns the granted details; the AS may narrow but not broaden. This resolves the Elevated Tokens open issue: tokens can be bound to the one operation the user approved.\n- **DTR.** [draft-ietf-oauth-deferred-token-response](https://datatracker.ietf.org/doc/draft-ietf-oauth-deferred-token-response/) is the generic \"come back later\" for any grant (`completion_mode` opt-in, 400 `authorization_pending` with a `deferral_code`, poll with `grant_type=urn:ietf:params:oauth:grant-type:deferred`). Our `request_code` plays the same role. Added an open issue proposing we profile on DTR once it stabilizes.\n- **Transaction Tokens for Agents** ([draft-araut-oauth-transaction-tokens-for-agents](https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/)) does not define a challenge or approval step; it propagates agent identity inside the RS trust domain. Referenced informatively as composable downstream work.\n- **Open issue** on transport: txn-challenge uses 401 + `transaction_authorization_required` + an `Accept-Txn-Challenge` header; we use 403 + `insufficient_scope` and the minimal scope as the support signal.\n- Fixed a broken citation of the WIMSE architecture draft.\n\n## Notes\n\n- Builds cleanly with kramdown-rfc and xml2rfc. The only warning is pre-existing: RFC 9700 is listed in references but never cited.\n- Net word count is up about 6% because the related-work section offsets the removed format text.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-19T22:56:54Z",
+      "updatedAt": "2026-11-19T23:05:32Z",
+      "baseRepository": "jdrosen/draft-rosenberg-oauth-aauth",
+      "baseRefName": "main",
+      "baseRefOid": "5ecddfc4f3d5bfd782a5feeed7587dc179c7e0c5",
+      "headRepository": "patwhite/draft-rosenberg-oauth-aauth",
+      "headRefName": "protocol-feedback-dtr-cf8372c9",
+      "headRefOid": "70ac46e4892c362fb8f0ec4bf27f3a656654a96a",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
       "comments": [],
       "reviews": []
     }
